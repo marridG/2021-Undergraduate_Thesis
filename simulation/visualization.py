@@ -4,8 +4,8 @@ from matplotlib import pyplot as plt
 
 class VisualCanvas:
     def __init__(self, height: int = 30, width: int = 50):
-        self.height = height
-        self.width = width
+        self.height = height  # representing the VERTICAL height in milli-meters
+        self.width = width  # representing the horizontal width in milli-meters
 
         self.color_unfilled = (255, 255, 255)  # white
         self.color_board = (0, 255, 0)  # lime
