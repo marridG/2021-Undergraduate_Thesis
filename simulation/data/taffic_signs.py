@@ -29,6 +29,14 @@ class TrafficSigns:
             "family": ["il*", ],  # cnt = 1
         }
     }
+    __ALL_NUMS = [
+        5, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120,  # speed limits
+        3.5, 4.5,  # height limits ("GB")
+        1.8, 1.9, 2.0, 2.2, 2.5, 3, 3.2, 4,  # height limits (web)
+        2.5,  # width limits ("GB")
+        2.2, 2.3, 2.4,  # weight limits (web)
+        2, 5, 7, 10, 13, 15, 20, 30, 40, 50, 55, 60,  # weight limits (web)
+    ]
     __MAXIMUM_SIGN_NUMBER = 200
     __MAXIMUM_SIGN_NUMBER_FRACTIONAL_DIGITS = 1
 
@@ -40,6 +48,9 @@ class TrafficSigns:
         #   & create bi-directional reference for category & fixed/family & sign
         self.cnt_sign = 0
         self.cnt_category = 0
+        self.cnt_nums = 0
+        self._num_idx_2_float = {}
+        self._num_float_2_idx = {}
         self._ff_str_2_idx = {"fixed": 0, "family": 1}  # will not be changed later
         self._ff_idx_2_str = {0: "fixed", 1: "family"}  # will not be changed later
         self._category_str_2_idx = {}
@@ -69,7 +80,7 @@ class TrafficSigns:
         """[NOT TESTED BUT SHOULD B BE CORRECT]"""
         # (alert: sensitive to NAMEs of fixed/family changes)
 
-        print("\t\tBuilding Bi-Directional Reference ...")
+        print("\t\tBuilding Bi-Directional Reference for All Traffic Signs...")
         for _cat, _items in self.__ALL_SIGNS_BY_CATEGORY.items():  # e.g., "warning", {"fixed": [], "family": [] }
             # add category bi-directional reference
             self._category_idx_2_str[self.cnt_category] = _cat
@@ -90,6 +101,18 @@ class TrafficSigns:
                     }
                     self.cnt_sign += 1
             self.cnt_category += 1
+
+        print("\t\t\t=== Done ===")
+
+        print("\t\tBuilding Bi-Directional Reference for All Possible Numbers...")
+        _added_nums = set()
+        for _idx, _num in enumerate(self.__ALL_NUMS):
+            if _num in _added_nums:
+                continue
+            self._num_float_2_idx[_num] = _idx
+            self._num_idx_2_float[_idx] = float
+            _added_nums.add(_num)
+            self.cnt_nums += 1
 
         print("\t\t\t=== Done ===")
 
@@ -146,18 +169,31 @@ class TrafficSigns:
         else:
             return self._sample_range["N/A"]["N/A"]
 
-    def _get_random_sign_number(self) -> float:
-        rand_val = random.random()  # [0, 1)
-        rand_val *= 1. * self.__MAXIMUM_SIGN_NUMBER
-        rand_val = round(rand_val)
+    def _get_random_sign_number(self) -> Tuple[int, float]:
+        """
+        Sample a random possible number on the traffic sign
+        :return:            (1) index of the number; (2) exact number
+        """
+        # # "continuous"-like version of numbers
+        # rand_val = random.random()  # [0, 1)
+        # rand_val *= 1. * self.__MAXIMUM_SIGN_NUMBER
+        # rand_val = round(rand_val)
+        #
+        # rand_frac = random.random()  # [0,1)
+        # rand_frac = round(rand_frac, self.__MAXIMUM_SIGN_NUMBER_FRACTIONAL_DIGITS)
+        #
+        # return rand_val + rand_frac
 
-        rand_frac = random.random()  # [0,1)
-        rand_frac = round(rand_frac, self.__MAXIMUM_SIGN_NUMBER_FRACTIONAL_DIGITS)
+        # "discrete"-like version of numbers
+        rand_idx = random.random()  # [0,1)
+        rand_idx *= 1. * self.cnt_nums
+        rand_idx = round(rand_idx)
+        rand_num = self._num_idx_2_float[rand_idx]
 
-        return rand_val + rand_frac
+        return rand_idx, rand_num
 
     def get_sample(self, category_idx: Optional[int] = None, fixed_or_family: Optional[int] = None) \
-            -> None or Dict[str, Union[str, Dict[str, int]]]:
+            -> None or Dict[str, Union[str, None, int, Dict[str, int]]]:
         """
         Get the encoding of a sample sign, w/wo limiting the category and/or whether is fixed or family
         :param category_idx:            only specify to limit the category, 0/1/2 for warning/prohibitory/mandatory
@@ -181,7 +217,7 @@ class TrafficSigns:
         _res_is_family = self._sign_str_2_idx[res_str]["is_family"]
         _res_encoding = self._sign_str_2_idx[res_str]["ref_idx"]
         res = {"str": res_str,
-               "num": None if not _res_is_family else self._get_random_sign_number(),
+               "num": None if not _res_is_family else self._get_random_sign_number()[0],
                "encoding": {"category": _res_encoding[0], "idx": _res_encoding[1]}}
         return res
 
@@ -202,8 +238,8 @@ if "__main__" == __name__:
     # print(len(obj._get_sample_idx_range(category_idx=2, fixed_or_family=1)))  # 1
     print(obj.get_sample())  # {'str': 'w36', 'num': None, 'encoding': {'category': 0, 'idx': 35}}
     print(obj.get_sample(category_idx=1))  # {'str': 'pb', 'num': None, 'encoding': {'category': 1, 'idx': 34}}
-    print(obj.get_sample(fixed_or_family=1))  # {'str': 'pr*', 'num': 19.4, 'encoding': {'category': 1, 'idx': 40}}
-    print(obj.get_sample(category_idx=1, fixed_or_family=1))  # {'str': 'pa*', 'num': 161.7, '..': {'.': 1, 'idx': 38}}
+    print(obj.get_sample(fixed_or_family=1))  # {'str': 'pr*', 'num': 8, 'encoding': {'category': 1, 'idx': 40}}
+    print(obj.get_sample(category_idx=1, fixed_or_family=1))  # {'str': 'pa*', 'num': 3, '..': {'.': 1, 'idx': 38}}
     print(obj.get_sample(category_idx=0, fixed_or_family=1))  # None
 
     print()
