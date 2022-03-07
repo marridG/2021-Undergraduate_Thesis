@@ -9,7 +9,7 @@ class VisualCanvas:
 
         self.color_unfilled = (255, 255, 255)  # white
         self.color_board = (0, 255, 0)  # lime
-        self.color_bright = (255, 0, 0)  # red
+        # self.color_bright = (255, 0, 0)  # red  # REMOVED: should be identical to that of the board
         self.color_dark = (0, 0, 255)  # blue
 
         self.canvas = np.full((height, width, 3), self.color_unfilled, dtype=int)  # RGB
