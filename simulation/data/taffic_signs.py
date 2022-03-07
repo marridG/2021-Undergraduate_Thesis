@@ -3,7 +3,7 @@ import random
 import math
 
 
-class TrafficSigns:
+class TrafficSignsData:
     __ALL_SIGNS_BY_CATEGORY = {  # cnt = 127
         "warning": {  # cnt = 67
             "fixed":
@@ -223,7 +223,7 @@ class TrafficSigns:
 
 
 if "__main__" == __name__:
-    obj = TrafficSigns()
+    obj = TrafficSignsData()
     # print(len(obj._get_sample_idx_range(category_idx=None, fixed_or_family=None)))  # 127
     # print(len(obj._get_sample_idx_range(category_idx=None, fixed_or_family=0)))  # 120
     # print(len(obj._get_sample_idx_range(category_idx=None, fixed_or_family=1)))  # 7
