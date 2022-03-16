@@ -106,11 +106,11 @@ class TrafficSignsData:
 
         print("\t\tBuilding Bi-Directional Reference for All Possible Numbers...")
         _added_nums = set()
-        for _idx, _num in enumerate(self.__ALL_NUMS):
+        for _num in self.__ALL_NUMS:
             if _num in _added_nums:
                 continue
-            self._num_float_2_idx[_num] = _idx
-            self._num_idx_2_float[_idx] = float
+            self._num_float_2_idx[_num] = self.cnt_nums
+            self._num_idx_2_float[self.cnt_nums] = _num
             _added_nums.add(_num)
             self.cnt_nums += 1
 
@@ -187,7 +187,7 @@ class TrafficSignsData:
         # "discrete"-like version of numbers
         rand_idx = random.random()  # [0,1)
         rand_idx *= 1. * self.cnt_nums
-        rand_idx = round(rand_idx)
+        rand_idx = int(rand_idx)
         rand_num = self._num_idx_2_float[rand_idx]
 
         return rand_idx, rand_num

@@ -102,7 +102,7 @@ def cal_max_line_resol_diff(_size, _resol, _dist, scale: str = "mm"):
 
     __x_values = np.arange(-__num_pt_per_side, __num_pt_per_side)
     if 0 == len(__x_values):  # not any possible points at all
-        return None, 0, None
+        return None, 0, None, None
     __y_values = 2 * np.tan(utils.degree_2_radian(deg=_resol)) * margin(__x_values, _resol)
 
     __max_y = np.max(__y_values)
@@ -110,12 +110,13 @@ def cal_max_line_resol_diff(_size, _resol, _dist, scale: str = "mm"):
     __delta_max_y = __max_y - __min_y
 
     __res = _dist * __delta_max_y  # in meters
+    __min_y_resol = _dist * np.tan(utils.degree_2_radian(deg=_resol))  # in meters
     if "m" == scale:  # in meters
-        return __res, __num_pt_per_side, (__max_y, __min_y, __delta_max_y)
+        return __res, __num_pt_per_side, (__max_y, __min_y, __delta_max_y), __min_y_resol
     if "cm" == scale:  # in centi-meters
-        return 100. * __res, __num_pt_per_side, (__max_y, __min_y, __delta_max_y)
+        return 100. * __res, __num_pt_per_side, (__max_y, __min_y, __delta_max_y), 100. * __min_y_resol
     if "mm" == scale:  # in milli-meters
-        return 100. * 10. * __res, __num_pt_per_side, (__max_y, __min_y, __delta_max_y)
+        return 100. * 10. * __res, __num_pt_per_side, (__max_y, __min_y, __delta_max_y), 100. * 10. * __min_y_resol
     raise NotImplementedError
 
 
@@ -123,15 +124,17 @@ sign_size_n_resol_vals = [(130., 0.1), (130., 0.2), (130., 0.4),
                           (65. * np.sqrt(3), 0.33), (65. * np.sqrt(3), 2.)]  # in (centi-meters, degrees)
 distance_vals = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
                  20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150]  # in meters
-print("d_j\t\\omega_0\td_0\t===>\tj(2j+1)\tdelta\tLine Resolution")
+print("d_j\t\\omega_0\td_0\t=>\tj(2j+1)\tdelta\tLine Resol Diff\tResol")
 for _size, _resol in sign_size_n_resol_vals:
     for _dist in distance_vals:
-        __val, __j, __y_vals = cal_max_line_resol_diff(_size=_size, _resol=_resol, _dist=_dist, scale="mm")
+        __val, __j, __y_vals, __line_resol = cal_max_line_resol_diff(
+            _size=_size, _resol=_resol, _dist=_dist, scale="mm")
         if __val is None and __y_vals is None:
-            print("%.5f\t%.2f\t%d\t===>\t%d (%d)\tN/A\tN/A" % (_size, _resol, _dist, __j, 2 * __j + 1))
+            print("%.2f\t%.2f\t%d\t=>\t%d (%d)\tN/A\tN/A\tN/A"
+                  % (_size, _resol, _dist, __j, 2 * __j + 1))
         else:
-            print("%.5f\t%.2f\t%d\t===>\t%d (%d)\t%.10f\t%.10f" % (_size, _resol, _dist, __j, 2 * __j + 1,
-                                                                   __y_vals[-1], __val))
+            print("%.2f\t%.2f\t%d\t=>\t%d (%d)\t%.10f\t%.10f\t%.5f"
+                  % (_size, _resol, _dist, __j, 2 * __j + 1, __y_vals[-1], __val, __line_resol))
 
 # plt.clf()
 # distance_vals = np.arange(0, 150 + 5, 5)  # in meters

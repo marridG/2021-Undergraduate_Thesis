@@ -47,13 +47,13 @@ class LiDARSampling:
         # np.where(white==(0,255,0))
 
         # assign BINARY-1 to all points of the board
-        _board_ref = np.where(np.all(points == self.canvas_obj.color_board, axis=-1))  # <tuple> of 3 np.ndarray
-        res[_board_ref[:-1]] = 1
+        _board_ref = np.where(np.all(points == self.canvas_obj.color_board, axis=-1))  # <tuple> of 2 np.ndarray
+        res[_board_ref] = 1
         # print(res)
 
         # assign BINARY-0 to all points of the shaded parts on the board
-        _dark_ref = np.where(np.all(points == self.canvas_obj.color_dark, axis=-1))  # <tuple> of 3 np.ndarray
-        res[_dark_ref[:-1]] = 0
+        _dark_ref = np.where(np.all(points == self.canvas_obj.color_dark, axis=-1))  # <tuple> of 2 np.ndarray
+        res[_dark_ref] = 0
         # print(res)
 
         return res
@@ -69,6 +69,7 @@ class LiDARSampling:
         hori_margin = dist_2_margin(dist=dist, angle_resol=self.hori_angle_resol)  # in mm
         vert_margin = dist_2_margin(dist=dist, angle_resol=self.vert_angle_resol)  # in mm
 
+        print("Start Sampling with Vertical/Horizontal Margin %d/%d mm ..." % (vert_margin, hori_margin))
         res = []
         for _height_start in range(0, vert_margin):  # vertically, each idx=1mm
             for _width_start in range(0, hori_margin):  # horizontally, each idx=1mm
@@ -82,6 +83,7 @@ class LiDARSampling:
 
                 res.append(__pts_binary)
 
+        print("=== DONE === with %d Groups of Sample Points" % len(res))
         return res
 
 

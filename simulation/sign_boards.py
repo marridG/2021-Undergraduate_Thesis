@@ -67,9 +67,9 @@ class TrafficSignBoard(VisualCanvas):
 
         assert top_left[0] >= 0 and top_left[1] >= 0, \
             "Top-Left Indices Out-Of-Range: (height, width)=(%d,%d) !>= (0,0)" % (top_left[0], top_left[1])
-        assert bottom_right[0] <= self.height - 1 and bottom_right[1] <= self.width - 1, \
+        assert bottom_right[0] <= self.height and bottom_right[1] <= self.width, \
             "Bottom-Right Indices Out-Of-Range: (height, width)=(%d,%d) !<= (%d, %d)" \
-            % (bottom_right[0], bottom_right[1], self.height - 1, self.width - 1)
+            % (bottom_right[0], bottom_right[1], self.height, self.width)
 
         print("Drawing Rectangle of (height,width)=(%d,%d) at (%d,%d)~(%d,%d)"
               % (height, width, top_left[0], top_left[1], bottom_right[0], bottom_right[1]))
@@ -119,6 +119,31 @@ class TrafficSignBoard(VisualCanvas):
         # plt.show()
 
         return
+
+    def place_encoding(self, encoding: np.ndarray) -> None:
+        # === DRAFT VERSION === almost the same as drawing a rectangle
+        height, width = encoding.shape
+
+        # translate binary representation to RGB colors
+        encoding_color = np.full((encoding.shape[0], encoding.shape[1], 3), -99, dtype=int)
+        encoding_color[np.where(encoding == 0)] = self.color_dark
+        encoding_color[np.where(encoding == 1)] = self.color_board
+
+        center = (self.height // 2, self.width // 2)  # (height, width)
+        # top_left = (center[0] - height // 2 - int(0 == height % 2), center[1] - width // 2 - int(0 == width % 2))
+        # bottom_right = (center[0] + height // 2 + int(0 == height % 2), center[1] + width // 2 + int(0 == width % 2))
+        top_left = (center[0] - height // 2, center[1] - width // 2)
+        bottom_right = (top_left[0] + height, top_left[1] + width)
+
+        assert top_left[0] >= 0 and top_left[1] >= 0, \
+            "Top-Left Indices Out-Of-Range: (height, width)=(%d,%d) !>= (0,0)" % (top_left[0], top_left[1])
+        assert bottom_right[0] <= self.height and bottom_right[1] <= self.width, \
+            "Bottom-Right Indices Out-Of-Range: (height, width)=(%d,%d) !<= (%d, %d)" \
+            % (bottom_right[0], bottom_right[1], self.height, self.width)
+
+        # print("Drawing Rectangle of (height,width)=(%d,%d) at (%d,%d)~(%d,%d)"
+        #       % (height, width, top_left[0], top_left[1], bottom_right[0], bottom_right[1]))
+        self.canvas[top_left[0]: bottom_right[0], top_left[1]:bottom_right[1], :] = encoding_color
 
 
 if "__main__" == __name__:
