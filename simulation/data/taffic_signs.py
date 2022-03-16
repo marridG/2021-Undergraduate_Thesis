@@ -2,44 +2,10 @@ from typing import *
 import random
 import math
 
+from data import constants
+
 
 class TrafficSignsData:
-    __ALL_SIGNS_BY_CATEGORY = {  # cnt = 127
-        "warning": {  # cnt = 67
-            "fixed":
-                ["w1", "w2", "w3", "w4", "w5", "w6", "w7", "w8", "w9", "w10",
-                 "w11", "w12", "w13", "w14", "w15", "w16", "w17", "w18", "w19", "w20",
-                 "w21", "w22", "w23", "w24", "w25", "w26", "w27", "w28", "w29", "w30",
-                 "w31", "w32", "w33", "w34", "w35", "w36", "w37", "w38", "w39", "w40",
-                 "w41", "w42", "w43", "w44", "w45", "w46", "w47", "w48", "w49", "w50",
-                 "w51", "w52", "w53", "w54", "w55", "w56", "w57", "w58", "w59", "w60",
-                 "w61", "w62", "w63", "w64", "w65", "w66", "w67", ],  # cnt = 67
-            "family": [],  # cnt = 0
-        },
-        "prohibitory": {  # cnt = 43
-            "fixed": ["p1", "p2", "p3", "p4", "p5", "p6", "p7", "p8", "p9", "p10",
-                      "p11", "p12", "p13", "p14", "p15", "p16", "p17", "p18", "p19", "p20",
-                      "p21", "p22", "p23", "p24", "p25", "p26", "p27", "p28",
-                      "pd", "pc", "pn", "pnl", "ps", "pg", "pb", "pe", "pne", ],  # cnt = 37 (28+9)
-            "family": ["pm*", "pa*", "pl*", "pr*", "ph*", "pw*", ],  # cnt = 6
-        },
-        "mandatory": {  # cnt = 17
-            "fixed": ["i1", "i2", "i3", "i4", "i5", "i6", "i7", "i8", "i9", "i10",
-                      "i11", "i12", "i13", "i14", "i15", "ip", ],  # cnt = 16 (15+1)
-            "family": ["il*", ],  # cnt = 1
-        }
-    }
-    __ALL_NUMS = [
-        5, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120,  # speed limits
-        3.5, 4.5,  # height limits ("GB")
-        1.8, 1.9, 2.0, 2.2, 2.5, 3, 3.2, 4,  # height limits (web)
-        2.5,  # width limits ("GB")
-        2.2, 2.3, 2.4,  # weight limits (web)
-        2, 5, 7, 10, 13, 15, 20, 30, 40, 50, 55, 60,  # weight limits (web)
-    ]
-    __MAXIMUM_SIGN_NUMBER = 200
-    __MAXIMUM_SIGN_NUMBER_FRACTIONAL_DIGITS = 1
-
     def __init__(self):
         print("Initializing Data ...")
         print("\tRaw Acquired")
@@ -67,8 +33,9 @@ class TrafficSignsData:
         # (alert: sensitive to NAMEs of fixed/family changes)
         self._init_build_reference()
 
-        assert 127 == self.cnt_sign
-        assert 3 == self.cnt_category
+        assert constants.CNT_SIGNS == self.cnt_sign
+        assert constants.CNT_CATEGORY_1 == self.cnt_category
+        assert constants.CNT_NUM == self.cnt_nums
         print("\tBi-Directional Reference Built")
 
         # ==2== build ranges of the global indices of signs, so as to effectively do sampling
@@ -81,7 +48,7 @@ class TrafficSignsData:
         # (alert: sensitive to NAMEs of fixed/family changes)
 
         print("\t\tBuilding Bi-Directional Reference for All Traffic Signs...")
-        for _cat, _items in self.__ALL_SIGNS_BY_CATEGORY.items():  # e.g., "warning", {"fixed": [], "family": [] }
+        for _cat, _items in constants.ALL_SIGNS_BY_CATEGORY.items():  # e.g., "warning", {"fixed": [], "family": [] }
             # add category bi-directional reference
             self._category_idx_2_str[self.cnt_category] = _cat
             self._category_str_2_idx[_cat] = self.cnt_category
@@ -106,7 +73,7 @@ class TrafficSignsData:
 
         print("\t\tBuilding Bi-Directional Reference for All Possible Numbers...")
         _added_nums = set()
-        for _num in self.__ALL_NUMS:
+        for _num in constants.ALL_NUMS:
             if _num in _added_nums:
                 continue
             self._num_float_2_idx[_num] = self.cnt_nums
@@ -132,7 +99,7 @@ class TrafficSignsData:
         self._sample_range["N/A"]["N/A"] = list(range(self.cnt_sign))
         for _cat_idx, _cat_str in self._category_idx_2_str.items():
             for __ff_idx, __ff_str in self._ff_idx_2_str.items():
-                for ___sign_str in self.__ALL_SIGNS_BY_CATEGORY[_cat_str][__ff_str]:
+                for ___sign_str in constants.ALL_SIGNS_BY_CATEGORY[_cat_str][__ff_str]:
                     ___sign_idx = self._sign_str_2_idx[___sign_str]["idx"]
                     self._sample_range["N/A"][__ff_idx].append(___sign_idx)
                     self._sample_range[_cat_idx]["N/A"].append(___sign_idx)
