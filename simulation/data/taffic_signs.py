@@ -238,6 +238,16 @@ class TrafficSignsData:
                              cat_2_idx: Optional[int] = None,
                              num_idx: Optional[int] = None, ) \
             -> None or Dict[str, str]:
+        """
+        Get sign info by category_1, category_2 (local ref) and/or num indices
+        :param cat_1_idx:           [Optional, default as None] category_1 idx
+        :param cat_2_idx:           [Optional, default as None] category_2 idx (local ref idx)
+        :param num_idx:             [Optional, default as None] num idx
+        :return:                    {"category_1"/"category_2"/"num": <str>, "is_complete": <bool>}
+                                    where,
+                                        empty <str> for unknown fields;
+                                        "is_complete" indicates whether all fields are known
+        """
         assert ((cat_1_idx is None) and (cat_2_idx is None) and (num_idx is None)) is not True
 
         """
