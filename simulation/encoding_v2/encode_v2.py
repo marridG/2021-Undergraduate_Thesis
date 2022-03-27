@@ -14,12 +14,12 @@ def encode(sample: Dict[str, Union[str, None, int, Dict[str, int]]]) -> np.ndarr
     res_length = 8
     res = np.full((3, res_length), -1, dtype=int)
 
-    # fill the second row: 1-ST category
+    # fill the 2ND row: 1-ST category
     _category_1 = sample["encoding"]["category"]  # int
-    _res_2_cat_1 = pattern_v2.get_pattern(idx=_category_1)  # np.ndarray
+    _res_2_cat_1 = pattern_v2.get_bin_pattern_by_idx(idx=_category_1)  # <np.ndarray>
     res[1, :] = _res_2_cat_1
 
-    # fill the last row: possible number on the traffic sign
+    # fill the 3RD row: possible number on the traffic sign
     if sample["num"] is None:
         _num_bin = np.full((res_length,), fill_value=1, dtype=int)
     else:
@@ -28,7 +28,7 @@ def encode(sample: Dict[str, Union[str, None, int, Dict[str, int]]]) -> np.ndarr
     _res_3_num = np.abs(_num_bin - res[1, :])
     res[-1, :] = _res_3_num
 
-    # fill the first row: 2-ST category
+    # fill the 1ST row: 2-ND category
     _category_2 = sample["encoding"]["idx"]  # int
     _cat_2_bin = pattern_v2.dec_2_non_dup_bin(num=_category_2, digit=res_length,
                                               category_1_idx=_category_1, is_category_2=True)
