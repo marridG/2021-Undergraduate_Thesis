@@ -24,7 +24,7 @@ sign_board_obj.render().savefig("./canvas_v1.png")
 
 # sample points on the canvas
 pt_sample_obj = LiDARSampling(canvas=sign_board_obj, vert_angle_resol=0.33, hori_angle_resol=0.1)
-sample_res = pt_sample_obj.sample_at_distance(dist=50)
+sample_res, _ = pt_sample_obj.sample_at_distance(dist=50)
 # print(sample_res)
 
 print()

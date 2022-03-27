@@ -1,25 +1,8 @@
-from typing import List
+from typing import List, Dict
 import numpy as np
 
 from visualization import VisualCanvas
 import utils
-
-HORI_HZ_2_RESOL = {5: 0.1, 10: 0.2, 20: 0.4}  # in Hz -> degrees
-VERT_16_TYPE_2_RESOL = 2  # 16-channel, in degrees
-
-
-def dist_2_margin(dist: int, angle_resol: float) -> int:
-    """
-    calculate the HORIZONTAL margin of two adjacent LiDAR points at the given distance
-    :param dist:                given distance from the point to the LiDAR (not projection) (in METER's)
-    :param angle_resol:         given angle resolution of the LiDAR (in DEGREE's)
-    :return:                    horizontal margin as a CEIL-ed int (in MILLI-METERS)
-    """
-    resol = utils.degree_2_radian(deg=angle_resol)  # in radians
-    res = dist * np.tan(resol)  # in meters
-    res *= 100. * 10.  # in milli-meters
-    res = np.ceil(res).astype(int)
-    return res
 
 
 class LiDARSampling:
@@ -58,19 +41,25 @@ class LiDARSampling:
 
         return res
 
-    def sample_at_distance(self, dist: int) -> List[np.ndarray]:
+    def sample_at_distance(self, dist: int) -> (List[np.ndarray], List[Dict[str, int]]):
         """
         Sample the whole canvas at the given distance
         :param dist:                given distance (in METER's)
-        :return:                    <list>of<np.ndarray>, containing (height//vert_margin)*(width//hori_margin) elem,
+        :return:                    (1) <list>of<np.ndarray>,
+                                        containing (height//vert_margin)*(width//hori_margin) elements,
                                         each as a binary representation of the sampled points:
                                         nan=off_board_pts, 1=on_board_pts, 0=dark_on_board_pts
+                                    (2) <list>of{"hori"/"vert": <int>},
+                                        of the same length as that of the first returned <list>,
+                                        where the i-th element is the starting location of the i-th sample,
+                                        and the location settings are given in millimeters
         """
-        hori_margin = dist_2_margin(dist=dist, angle_resol=self.hori_angle_resol)  # in mm
-        vert_margin = dist_2_margin(dist=dist, angle_resol=self.vert_angle_resol)  # in mm
+        hori_margin = utils.dist_2_margin(dist=dist, angle_resol=self.hori_angle_resol)  # in mm
+        vert_margin = utils.dist_2_margin(dist=dist, angle_resol=self.vert_angle_resol)  # in mm
 
         print("Start Sampling with Vertical/Horizontal Margin %d/%d mm ..." % (vert_margin, hori_margin))
         res = []
+        res_loc = []
         for _height_start in range(0, vert_margin):  # vertically, each idx=1mm
             for _width_start in range(0, hori_margin):  # horizontally, each idx=1mm
                 # do sampling
@@ -82,9 +71,10 @@ class LiDARSampling:
                 # print(__pts_binary.shape)
 
                 res.append(__pts_binary)
+                res_loc.append({"hori": _height_start, "vert": _width_start})
 
         print("=== DONE === with %d Groups of Sample Points" % len(res))
-        return res
+        return res, res_loc
 
 
 if "__main__" == __name__:
