@@ -1,4 +1,4 @@
-from typing import *
+from typing import List, Dict, Optional, Union, Tuple
 import random
 import math
 
@@ -12,20 +12,27 @@ class TrafficSignsData:
 
         # ==1== assign each fixed/"family representative" sign a global index,
         #   & create bi-directional reference for category & fixed/family & sign
+        # (1) counts
         self.cnt_sign = 0
         self.cnt_category = 0
         self.cnt_nums = 0
+        # (2) num refs
         self._num_idx_2_float = {}
         self._num_float_2_idx = {}
+        # (3) family str refs
         self._ff_str_2_idx = {"fixed": 0, "family": 1}  # will not be changed later
         self._ff_idx_2_str = {0: "fixed", 1: "family"}  # will not be changed later
+        # (4) category_1 ref
         self._category_str_2_idx = {}
         self._category_idx_2_str = {}
+        self._category_str_2_have_family = {}
+        # (5) full sign info ref (w.r.t. GLOBAL IDX)
         #   [sign] global idx to str:
         #       {idx: {"ref": [key_refs,], "val": sign_str, "is_family": bool}, ...}
         #   e.g. { 0: {"ref": ["warning", "fixed", 0], "val": "w1", "is_family": False}, ... }
-        self._sign_idx_2_str = {}
-        #   [sign] str to global idx:
+        self._sign_global_idx_2_str = {}
+        self._sign_local_idx_2_global_idx = {}
+        #   [sign] str to local_ref_idx & global idx:
         #       {sign_str: {"ref_idx": [category_idx, sub_idx], "idx": idx} ...}
         #   e.g. { "pm*": {"ref_idx": [1, 35], "idx": 102}, ... }
         self._sign_str_2_idx = {}
@@ -51,13 +58,14 @@ class TrafficSignsData:
         for _cat, _items in constants.ALL_SIGNS_BY_CATEGORY.items():  # e.g., "warning", {"fixed": [], "family": [] }
             # add category bi-directional reference
             self._category_idx_2_str[self.cnt_category] = _cat
+            self._category_str_2_have_family[_cat] = False if 0 == len(_items["family"]) else True
             self._category_str_2_idx[_cat] = self.cnt_category
             __fixed_cnt_base = len(_items["fixed"])  # to calculate the real indices of a sign in a category
-            for __rep, __items in _items.items():  # e.g. "family", []
+            for __rep, __items in _items.items():  # e.g. ("family", []) or ("fixed", ["w1", "w2", ...])
                 for ___sign_idx, ___sign_item in enumerate(__items):
                     ___sign_is_family = False if "fixed" == __rep else True
                     # add sign bi-directional reference
-                    self._sign_idx_2_str[self.cnt_sign] = {
+                    self._sign_global_idx_2_str[self.cnt_sign] = {
                         "ref": [_cat, __rep, ___sign_idx], "val": ___sign_item,
                         "is_family": ___sign_is_family
                     }
@@ -68,6 +76,13 @@ class TrafficSignsData:
                     }
                     self.cnt_sign += 1
             self.cnt_category += 1
+
+        self._sign_local_idx_2_global_idx = {i: {} for i in range(self.cnt_category)}
+        for _sign_gbl_idx in range(self.cnt_sign):
+            _sign_str = self._sign_global_idx_2_str[_sign_gbl_idx]["val"]
+            _sign_ref_idx = self._sign_str_2_idx[_sign_str]["ref_idx"]  # e.g. [0, 0] for global #0 "w1"
+            _sign_cat_1_idx, _sign_cat_2_idx = _sign_ref_idx
+            self._sign_local_idx_2_global_idx[_sign_cat_1_idx][_sign_cat_2_idx] = _sign_gbl_idx
 
         print("\t\t\t=== Done ===")
 
@@ -178,7 +193,7 @@ class TrafficSignsData:
         except IndexError:  # choosing from an empty list, i.e., NO possible samples
             return None
 
-        res_str = self._sign_idx_2_str[res_idx]["val"]
+        res_str = self._sign_global_idx_2_str[res_idx]["val"]
 
         # parse the return data
         _res_is_family = self._sign_str_2_idx[res_str]["is_family"]
@@ -186,6 +201,147 @@ class TrafficSignsData:
         res = {"str": res_str,
                "num": None if not _res_is_family else self._get_random_sign_number()[0],
                "encoding": {"category": _res_encoding[0], "idx": _res_encoding[1]}}
+        return res
+
+    def _get_cat_1_str_by_idx(self, cat_1_idx: int) -> None or str:
+        if not (0 <= cat_1_idx <= constants.CNT_CATEGORY_1 - 1):
+            return None
+
+        res = self._category_idx_2_str[cat_1_idx]
+        return res
+
+    def _get_cat_2_str_by_global_idx(self, cat_2_gbl_idx: int) -> None or str:
+        # assert that such a sign exists (general)
+        if not (0 <= cat_2_gbl_idx <= constants.CNT_SIGNS - 1):
+            return None
+
+        sign_info = self._sign_global_idx_2_str[cat_2_gbl_idx]
+        res = sign_info["val"]
+        return res
+
+    def _get_cat_2_global_idx(self, cat_1_idx: int, cat_2_idx: int) -> None or int:
+        try:
+            res = self._sign_local_idx_2_global_idx[cat_1_idx][cat_2_idx]
+            return res
+        except KeyError:
+            return None
+
+    def _get_num_str_by_idx(self, num_idx: int) -> None or str:
+        if not (0 <= num_idx <= constants.CNT_NUM - 1):
+            return None
+
+        res = self._num_idx_2_float[num_idx]  # <float> or <int>
+        res = str(res)
+        return res
+
+    def get_sign_info_by_idx(self, cat_1_idx: Optional[int] = None,
+                             cat_2_idx: Optional[int] = None,
+                             num_idx: Optional[int] = None, ) \
+            -> None or Dict[str, str]:
+        assert ((cat_1_idx is None) and (cat_2_idx is None) and (num_idx is None)) is not True
+
+        """
+        # extract all possible info, with single-field validation assured (any invalid idx will return None)
+        res = {"category_1": "", "category_2": "", "num": "", "is_complete": False}
+        if cat_1_idx is not None:
+            _cat_1_str = self._get_cat_1_str_by_idx(cat_1_idx=cat_1_idx)
+            if _cat_1_str is None:
+                return None
+            res["category_1"] = _cat_1_str
+        if cat_2_idx is not None:
+            _cat_2_gbl_idx = self._get_cat_2_global_idx(cat_1_idx=cat_1_idx, cat_2_idx=cat_2_idx)
+            _cat_2_str = self._get_cat_2_str_by_global_idx(cat_2_gbl_idx=_cat_2_gbl_idx)
+            if _cat_2_str is None:
+                return None
+            res["category_2"] = _cat_2_str
+        if num_idx is not None:
+            _num_str = self._get_num_str_by_idx(num_idx=num_idx)
+            if _num_str is None:
+                return None
+            res["num"] = _num_str
+        # now: idx is not None <==> ""!=res[key]
+
+        # needless to validate: cat_1; cat_2 (impossible); num;
+
+        # validate the extracted sign info: category_1 <-> sign & sign <-> have_num_part
+        #   (& possibly fill cat_1 res info if not filled, by cat_2 idx)
+        #   (& insert is_complete info)
+        #   covered: cat_1 + cat_2 + num; cat_1 + cat_2; cat_2 + num;
+        if cat_2_idx is not None:
+            sign_info = self._sign_global_idx_2_str[cat_2_idx]
+            # validation: category_1 <-> sign
+            if cat_1_idx is not None:
+                if sign_info["ref"][0] != res["category_1"]:
+                    return None
+            # fill cat_1 info if unfilled
+            else:
+                res["category_1"] = sign_info["ref"][0]
+            # validation: sign <-> have_num_part
+            if num_idx is not None:
+                if sign_info["is_family"] is False:
+                    return None
+            # insert is_complete info
+            res["is_complete"] = ((sign_info["is_family"] is True) == (num_idx is not None))
+
+        # now: idx is not None ==> ""!=res[key] BUT NOT INVERSELY! (since cat_2 ==> cat_1)
+
+        # validate the extracted sign info: category_1 <-> have_num_part
+        #   covered: cat_1 + num; === ALL COVERED ===
+        if cat_2_idx is None and "" != res["category_1"] and "" != res["num"]:
+            _have_family = self._category_str_2_have_family[res["category_1"]]
+            if _have_family is False:
+                return None
+        """  # codes if cat_2_idx is global idx
+
+        # extract all possible info, with single-field validation assured (any invalid idx will return None)
+        res = {"category_1": "", "category_2": "", "num": "", "is_complete": False}
+        if cat_1_idx is not None:
+            _cat_1_str = self._get_cat_1_str_by_idx(cat_1_idx=cat_1_idx)
+            if _cat_1_str is None:
+                return None
+            res["category_1"] = _cat_1_str
+            if cat_2_idx is not None:
+                _cat_2_gbl_idx = self._get_cat_2_global_idx(cat_1_idx=cat_1_idx, cat_2_idx=cat_2_idx)
+                if _cat_2_gbl_idx is None:
+                    return None
+                _cat_2_str = self._get_cat_2_str_by_global_idx(cat_2_gbl_idx=_cat_2_gbl_idx)
+                if _cat_2_str is None:
+                    return None
+                res["category_2"] = _cat_2_str
+        if num_idx is not None:
+            _num_str = self._get_num_str_by_idx(num_idx=num_idx)
+            if _num_str is None:
+                return None
+            res["num"] = _num_str
+        # now: idx is not None <==> ""!=res[key]
+
+        # needless to validate: cat_1; cat_2 (impossible); num;
+
+        # validate the extracted sign info: category_1 <-> sign & sign <-> have_num_part
+        #   (& insert is_complete info)
+        #   covered: cat_1 + cat_2 + num; cat_1 + cat_2; cat_2 + num (meaningless for cat_2, & thus <=);
+        if cat_1_idx is not None and cat_2_idx is not None:
+            cat_2_gbl_idx = self._get_cat_2_global_idx(cat_1_idx=cat_1_idx, cat_2_idx=cat_2_idx)
+            if cat_2_gbl_idx is None:
+                return None
+            sign_info = self._sign_global_idx_2_str[cat_2_gbl_idx]
+            # validation: category_1 <-> sign
+            if sign_info["ref"][0] != res["category_1"]:
+                return None
+            # validation: sign <-> have_num_part
+            if num_idx is not None:
+                if sign_info["is_family"] is False:
+                    return None
+            # insert is_complete info
+            res["is_complete"] = ((sign_info["is_family"] is True) == (num_idx is not None))
+
+        # validate the extracted sign info: category_1 <-> have_num_part
+        #   covered: cat_1 + num; === ALL COVERED ===
+        if cat_2_idx is None and cat_1_idx is not None and num_idx is not None:
+            _have_family = self._category_str_2_have_family[res["category_1"]]
+            if _have_family is False:
+                return None
+
         return res
 
 
@@ -203,10 +359,33 @@ if "__main__" == __name__:
     # print(len(obj._get_sample_idx_range(category_idx=2, fixed_or_family=None)))  # 17
     # print(len(obj._get_sample_idx_range(category_idx=2, fixed_or_family=0)))  # 16
     # print(len(obj._get_sample_idx_range(category_idx=2, fixed_or_family=1)))  # 1
+    print("===== Sampling =====")
     print(obj.get_sample())  # {'str': 'w36', 'num': None, 'encoding': {'category': 0, 'idx': 35}}
     print(obj.get_sample(category_idx=1))  # {'str': 'pb', 'num': None, 'encoding': {'category': 1, 'idx': 34}}
     print(obj.get_sample(fixed_or_family=1))  # {'str': 'pr*', 'num': 8, 'encoding': {'category': 1, 'idx': 40}}
     print(obj.get_sample(category_idx=1, fixed_or_family=1))  # {'str': 'pa*', 'num': 3, '..': {'.': 1, 'idx': 38}}
     print(obj.get_sample(category_idx=0, fixed_or_family=1))  # None
+    print()
+
+    print("===== Interpreting =====")
+    print(obj.get_sign_info_by_idx(cat_1_idx=1))  # {'c1': 'proh', 'c2': '', 'num': '', 'comp': False}
+    print(obj.get_sign_info_by_idx(cat_1_idx=-2))  # [invalid] None
+    print(obj.get_sign_info_by_idx(cat_1_idx=3))  # [invalid] None
+    print(obj.get_sign_info_by_idx(cat_2_idx=12))  # {'c1': 'warning', 'c2': 'w13', 'num': '', 'comp': True}
+    print(obj.get_sign_info_by_idx(cat_2_idx=-2))  # [invalid] None
+    print(obj.get_sign_info_by_idx(cat_2_idx=129))  # [invalid] None
+    print(obj.get_sign_info_by_idx(num_idx=15))  # {'c1': '', 'c2': '', 'num': '1.8', 'comp': False}
+    print(obj.get_sign_info_by_idx(num_idx=-2))  # [invalid] None
+    print(obj.get_sign_info_by_idx(num_idx=29))  # [invalid] None
+    print(obj.get_sign_info_by_idx(cat_1_idx=0, cat_2_idx=3))  # {'c1': 'warning', 'c2': 'w4', 'num': '', 'comp': True}
+    print(obj.get_sign_info_by_idx(cat_1_idx=1, cat_2_idx=106))  # {'c1': 'proh', 'c2': 'pl*', 'num': '', 'comp': False}
+    print(obj.get_sign_info_by_idx(cat_1_idx=1, cat_2_idx=3))  # [invalid] None
+    print(obj.get_sign_info_by_idx(cat_1_idx=1, num_idx=15))  # {'c1': 'proh', 'c2': '', 'num': '1.8', 'comp': False}
+    print(obj.get_sign_info_by_idx(cat_1_idx=0, num_idx=15))  # [invalid] None
+    print(obj.get_sign_info_by_idx(cat_2_idx=106, num_idx=15))  # {'c1': 'proh', 'c2': 'pl*', 'num': '1.8', 'cp': True}
+    print(obj.get_sign_info_by_idx(cat_2_idx=102, num_idx=15))  # [invalid] None
+    print(obj.get_sign_info_by_idx(cat_1_idx=1, cat_2_idx=106, num_idx=15))  # {1: 'p', 2: 'pl*', 'n': '1.8', 'c': T}
+    print(obj.get_sign_info_by_idx(cat_1_idx=1, cat_2_idx=102, num_idx=15))  # [invalid] None
+    print(obj.get_sign_info_by_idx(cat_1_idx=2, cat_2_idx=106, num_idx=15))  # [invalid] None
 
     print()
