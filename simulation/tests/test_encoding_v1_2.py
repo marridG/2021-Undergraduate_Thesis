@@ -1,10 +1,10 @@
 from tqdm import tqdm
 
-from data.taffic_signs import TrafficSignsData
+from data_v1.taffic_signs import TrafficSignsData
 from sign_boards import TrafficSignBoard
 from lidar_points import LiDARSampling
-from encoding_v2.encode_v2 import encode
-from encoding_v2.decode_v2 import decode
+from encoding_v1_2.encode_v1_2 import encode
+from encoding_v1_2.decode_v1_2 import decode
 import utils
 from simulation.exceptions import *
 

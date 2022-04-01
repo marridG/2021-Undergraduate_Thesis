@@ -2,7 +2,7 @@ from typing import List
 import numpy as np
 
 from simulation import utils
-from data import constants
+from data_v1 import constants
 
 ENCODING_LENGTH = 8
 ENCODING_LEVELS = 3

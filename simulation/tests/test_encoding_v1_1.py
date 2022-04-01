@@ -1,7 +1,7 @@
-from data.taffic_signs import TrafficSignsData
+from data_v1.taffic_signs import TrafficSignsData
 from sign_boards import TrafficSignBoard
 from lidar_points import LiDARSampling
-from encoding_v1.encode_v1 import encode
+from encoding_v1_1.encode_v1_1 import encode
 import utils
 
 # sample a traffic sign

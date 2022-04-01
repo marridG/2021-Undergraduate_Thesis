@@ -1,11 +1,11 @@
 from typing import List, Dict, Tuple, Optional
 import numpy as np
 
-from data.taffic_signs import TrafficSignsData
+from data_v1.taffic_signs import TrafficSignsData
 from simulation import utils
 from simulation.exceptions import *
-from encoding_v2 import pattern_v2, substring_match_BM
-from data import constants
+from encoding_v1_2 import pattern_v1_2, substring_match_BM
+from data_v1 import constants
 
 
 def _search_bin_array_patterns(seq: np.ndarray, pat: np.ndarray) -> (bool, int):
@@ -53,9 +53,9 @@ def _merge_lines(lines_decoded: List[np.ndarray]) -> np.ndarray:
         _res.append(_line)
 
     # check the sufficiency of encoding levels
-    if pattern_v2.ENCODING_LEVELS < len(_res):
+    if pattern_v1_2.ENCODING_LEVELS < len(_res):
         raise DecodeFailureVert("Too Many Levels: Expecting <= %d. Got %d"
-                                % (pattern_v2.ENCODING_LEVELS, len(_res)))
+                                % (pattern_v1_2.ENCODING_LEVELS, len(_res)))
 
     res = np.array(_res, dtype=int)
     return res
@@ -64,20 +64,20 @@ def _merge_lines(lines_decoded: List[np.ndarray]) -> np.ndarray:
 def _decode_handful_lines(lines_decoded: np.ndarray, cat_1_idx: int) -> Dict[str, int]:
     """
     Decode handful decoded lines
-    :param lines_decoded:           of shape ((0,pattern_v2.ENCODING_LEVELS], pattern_v2.ENCODING_LENGTH)
+    :param lines_decoded:           of shape ((0,pattern_v1_2.ENCODING_LEVELS], pattern_v1_2.ENCODING_LENGTH)
     :param cat_1_idx:               category_1 idx
     :return:                        {"category_1": cat_1_idx, "category_2": cat_2_idx, "num": num_idx}
                                     value is `None` if the corresponding key field cannot be decoded
                                     ("category_1" will never be `None`)
     """
-    assert pattern_v2.ENCODING_LEVELS >= lines_decoded.shape[0] > 0
-    assert pattern_v2.ENCODING_LENGTH == lines_decoded.shape[1]
+    assert pattern_v1_2.ENCODING_LEVELS >= lines_decoded.shape[0] > 0
+    assert pattern_v1_2.ENCODING_LENGTH == lines_decoded.shape[1]
 
     lines_decoded = lines_decoded.astype(int)
     res = {"category_1": cat_1_idx, "category_2": None, "num": None}
 
     # find the line representing the category_1
-    cat_1_pat = pattern_v2.get_bin_pattern_by_idx(idx=cat_1_idx)
+    cat_1_pat = pattern_v1_2.get_bin_pattern_by_idx(idx=cat_1_idx)
     cat_1_line_idx = -1
     for _line_idx, _line in enumerate(lines_decoded):
         if np.array_equal(_line, cat_1_pat) is True:
@@ -94,25 +94,25 @@ def _decode_handful_lines(lines_decoded: np.ndarray, cat_1_idx: int) -> Dict[str
         # [case 2-1] two lines for category_1(LINE#1) and category_2(LINE#0)
         if 1 == cat_1_line_idx:
             cat_2_bin = lines_decoded[0] ^ lines_decoded[1]
-            cat_2_idx = pattern_v2.non_dup_bin_2_dec(num=cat_2_bin, category_1_idx=cat_1_idx,
+            cat_2_idx = pattern_v1_2.non_dup_bin_2_dec(num=cat_2_bin, category_1_idx=cat_1_idx,
                                                      is_category_2=True, is_num=False)
             res["category_2"] = cat_2_idx
             return res
         # [case 2-1] two lines for category_1(LINE#1, but as #0) and num(LINE#2, but as #1)
         else:  # i.e., 0 == cat_1_line_idx
             num_bin = lines_decoded[1] ^ lines_decoded[0]
-            num_idx = pattern_v2.non_dup_bin_2_dec(num=num_bin, category_1_idx=cat_1_idx,
+            num_idx = pattern_v1_2.non_dup_bin_2_dec(num=num_bin, category_1_idx=cat_1_idx,
                                                    is_category_2=False, is_num=True)
             res["num"] = num_idx
             return res
     # [case 3] three lines for all category_1(LINE#1), category_2(LINE#0) and num(LINE#2)
     else:  # i.e., 3 == lines_decoded.shape[0]
         cat_2_bin = lines_decoded[0] ^ lines_decoded[1]
-        cat_2_idx = pattern_v2.non_dup_bin_2_dec(num=cat_2_bin, category_1_idx=cat_1_idx,
+        cat_2_idx = pattern_v1_2.non_dup_bin_2_dec(num=cat_2_bin, category_1_idx=cat_1_idx,
                                                  is_category_2=True, is_num=False)
         res["category_2"] = cat_2_idx
         num_bin = lines_decoded[2] ^ lines_decoded[1]
-        num_idx = pattern_v2.non_dup_bin_2_dec(num=num_bin, category_1_idx=cat_1_idx,
+        num_idx = pattern_v1_2.non_dup_bin_2_dec(num=num_bin, category_1_idx=cat_1_idx,
                                                is_category_2=False, is_num=True)
         res["num"] = num_idx
         return res
@@ -127,7 +127,7 @@ def decode(sign_data_obj: TrafficSignsData,
 
     # === generate all possible location combinations, by the horizontal starting location
     hori_plans = []
-    all_bin_patterns = pattern_v2.get_all_bin_patterns()
+    all_bin_patterns = pattern_v1_2.get_all_bin_patterns()
     for _hori in range(int(hori_margin)):  # horizontal starting location
         _lines_decoded = []  # <list>of<np.ndarray>
         _pattern_found_src_idx = set()  # to filter out those found multiple patterns
@@ -173,7 +173,7 @@ def decode(sign_data_obj: TrafficSignsData,
     for _plan_idx, _plan in enumerate(hori_plans):
         _plan_dec = _plan["lines_decoded"]  # [<np.ndarray>s]
         _plan_dec_pat = _plan["lines_decoded_patterns_found_idx"][0]  # {"line": 2, "pat_idx":1, "loc":2}
-        _plan_dec_slice = [__line[_plan_dec_pat["loc"]:_plan_dec_pat["loc"] + pattern_v2.ENCODING_LENGTH]
+        _plan_dec_slice = [__line[_plan_dec_pat["loc"]:_plan_dec_pat["loc"] + pattern_v1_2.ENCODING_LENGTH]
                            for __line in _plan_dec]
         _plan["lines_decoded_sliced"] = _plan_dec_slice
         hori_plans_sliced.append(_plan)
