@@ -158,6 +158,7 @@ class TrafficSignsData:
                 else:
                     return None
                 res["category_2"] = _cat_2_str
+                res["is_complete"] = True
 
         return res
 
