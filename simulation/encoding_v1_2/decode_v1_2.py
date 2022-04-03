@@ -63,7 +63,7 @@ def _merge_lines(lines_decoded: List[np.ndarray]) -> np.ndarray:
 
 def _decode_handful_lines(lines_decoded: np.ndarray, cat_1_idx: int) -> Dict[str, int]:
     """
-    Decode handful decoded lines
+    Decode handful decoded lines TODO: lines_decoded should have at most pattern_v1_2.ENCODING_LEVELS+2 lines
     :param lines_decoded:           of shape ((0,pattern_v1_2.ENCODING_LEVELS], pattern_v1_2.ENCODING_LENGTH)
     :param cat_1_idx:               category_1 idx
     :return:                        {"category_1": cat_1_idx, "category_2": cat_2_idx, "num": num_idx}
@@ -95,25 +95,25 @@ def _decode_handful_lines(lines_decoded: np.ndarray, cat_1_idx: int) -> Dict[str
         if 1 == cat_1_line_idx:
             cat_2_bin = lines_decoded[0] ^ lines_decoded[1]
             cat_2_idx = pattern_v1_2.non_dup_bin_2_dec(num=cat_2_bin, category_1_idx=cat_1_idx,
-                                                     is_category_2=True, is_num=False)
+                                                       is_category_2=True, is_num=False)
             res["category_2"] = cat_2_idx
             return res
         # [case 2-1] two lines for category_1(LINE#1, but as #0) and num(LINE#2, but as #1)
         else:  # i.e., 0 == cat_1_line_idx
             num_bin = lines_decoded[1] ^ lines_decoded[0]
             num_idx = pattern_v1_2.non_dup_bin_2_dec(num=num_bin, category_1_idx=cat_1_idx,
-                                                   is_category_2=False, is_num=True)
+                                                     is_category_2=False, is_num=True)
             res["num"] = num_idx
             return res
     # [case 3] three lines for all category_1(LINE#1), category_2(LINE#0) and num(LINE#2)
     else:  # i.e., 3 == lines_decoded.shape[0]
         cat_2_bin = lines_decoded[0] ^ lines_decoded[1]
         cat_2_idx = pattern_v1_2.non_dup_bin_2_dec(num=cat_2_bin, category_1_idx=cat_1_idx,
-                                                 is_category_2=True, is_num=False)
+                                                   is_category_2=True, is_num=False)
         res["category_2"] = cat_2_idx
         num_bin = lines_decoded[2] ^ lines_decoded[1]
         num_idx = pattern_v1_2.non_dup_bin_2_dec(num=num_bin, category_1_idx=cat_1_idx,
-                                               is_category_2=False, is_num=True)
+                                                 is_category_2=False, is_num=True)
         res["num"] = num_idx
         return res
 
