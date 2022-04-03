@@ -2,7 +2,7 @@ from typing import List, Dict, Optional, Union, Tuple
 import random
 import math
 
-from data2 import constants
+from data_v2 import constants
 
 
 class TrafficSignsData:
