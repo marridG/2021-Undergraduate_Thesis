@@ -60,6 +60,7 @@ class LiDARSampling:
         print("Start Sampling at %dm, with Vertical/Horizontal Margin %d/%d mm ..." % (dist, vert_margin, hori_margin))
         res = []
         res_loc = []
+        res_shape_min, res_shape_max = (self.canvas_obj.height, self.canvas_obj.width), (0, 0)
         for _height_start in range(0, vert_margin):  # vertically, each idx=1mm
             for _width_start in range(0, hori_margin):  # horizontally, each idx=1mm
                 # do sampling
@@ -72,8 +73,14 @@ class LiDARSampling:
 
                 res.append(__pts_binary)
                 res_loc.append({"hori": _height_start, "vert": _width_start})
+                # update min/max shape
+                res_shape_min = (min(res_shape_min[0], __pts_binary.shape[0]),
+                                 min(res_shape_min[1], __pts_binary.shape[1]))
+                res_shape_max = (max(res_shape_max[0], __pts_binary.shape[0]),
+                                 max(res_shape_max[1], __pts_binary.shape[1]))
 
-        print("=== DONE === with %d Groups of Sample Points" % len(res))
+        print("=== DONE === with %d Groups of Sample Points, Shaped (%d,%d)~(%d,%d)"
+              % (len(res), res_shape_min[0], res_shape_min[1], res_shape_max[0], res_shape_max[1]))
         return res, res_loc
 
 
