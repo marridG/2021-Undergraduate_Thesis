@@ -75,7 +75,7 @@ class TrafficSignsData:
                 __sign_global_idx = self._sign_local_idx_2_global_idx[_cat_idx][__sign_idx]
                 self._sample_range[_cat_idx].append(__sign_global_idx)
 
-    print("\t\t\t=== DONE ===")
+        print("\t\t\t=== DONE ===")
 
     def _get_sample_idx_range(self, category_idx: Optional[int] = None, sign_idx: Optional[int] = None) \
             -> List[int]:
