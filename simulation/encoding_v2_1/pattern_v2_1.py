@@ -24,7 +24,7 @@ for __cat_2_bin in _all_cat_2_bin:
     __cat_2_bin = np.array(__cat_2_bin)
     __cat_2_dec = utils.num_bin_2_dec(num=__cat_2_bin)
     _all_avoid_bin_dec_set.add(__cat_2_dec)
-_ALL_BIN_PATTERNS_AVOID_DEC_IDX = list(_all_avoid_bin_dec_set)
+_ALL_BIN_PATTERNS_AVOID_DEC_IDX = sorted(list(_all_avoid_bin_dec_set))
 _ALL_BIN_PATTERNS_DEC_IDX_SUBSTITUTION_ORI_2_SUB = {
     # substitutions of the avoided indices: category_1_idx->avoided_original->substitution
     0: {}, 1: {}, 2: {},
