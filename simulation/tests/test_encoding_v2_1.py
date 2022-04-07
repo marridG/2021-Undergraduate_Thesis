@@ -1,4 +1,5 @@
 from tqdm import tqdm
+import math
 
 from data_v2.taffic_signs import TrafficSignsData
 from sign_boards import TrafficSignBoard
@@ -29,16 +30,21 @@ sign_board_obj.place_encoding(encoding=data_sample_raw_bar)
 sign_board_obj.render().savefig("./canvas_v2_1.png")
 
 # sample points on the canvas
-distance = 50  # meters
+distance = 120  # meters
 hori_angle_resol, vert_angle_resol = 0.1, 0.33
 pt_sample_obj = LiDARSampling(canvas=sign_board_obj,
                               hori_angle_resol=hori_angle_resol, vert_angle_resol=vert_angle_resol)
-sample_res, sample_res_loc = pt_sample_obj.sample_at_distance(dist=50)
+sample_res, sample_res_loc = pt_sample_obj.sample_at_distance(dist=distance)
 # print(sample_res)
 
-ENABLE_STATS_ANA = False
-cnt_success, cnt_suc_full, cnt_suc_not_full_not_tol, cnt_suc_tol, cnt_fail = 0, 0, 0, 0, 0
-_iter_obj = range(0, len(sample_res)) if not ENABLE_STATS_ANA else tqdm(range(0, len(sample_res), 10))
+ENABLE_STATS_ANA = True
+# statistical analysis settings
+STATS_ANA_MAX_ATTEMPTS = 5000
+sample_step_size = math.ceil(len(sample_res) * 1. / STATS_ANA_MAX_ATTEMPTS)
+cnt_success, cnt_suc_full, cnt_suc_not_full_not_tol, cnt_suc_tol, cnt_fail, cnt_wrong = 0, 0, 0, 0, 0, 0
+cnt_suc_levels = {1: 0, 2: 0}
+_iter_obj = range(0, len(sample_res)) if not ENABLE_STATS_ANA else tqdm(range(0, len(sample_res), sample_step_size))
+# actual iteration starts here
 for _sample_idx in _iter_obj:
     _sample = sample_res[_sample_idx]
     _sample_loc = sample_res_loc[_sample_idx]
@@ -58,9 +64,13 @@ for _sample_idx in _iter_obj:
                 _is_suc = (_sample_decoded["category_1"] == data_sample["encoding"]["category"])
             if _is_suc is True and _sample_decoded["category_2"] is not None:
                 _is_suc = (_sample_decoded["category_2"] == data_sample["encoding"]["idx"])
+            if _is_suc is True:
+                _cnt_levels = int(_sample_decoded["category_1"] is not None) + \
+                              int(_sample_decoded["category_2"] is not None)
+                cnt_suc_levels[_cnt_levels] += 1
             # update counts
             if _is_suc is False:
-                cnt_fail += 1
+                cnt_wrong += 1
                 continue
             cnt_success += 1
             if _sample_decoded_info["is_complete"] is True:
@@ -76,6 +86,10 @@ for _sample_idx in _iter_obj:
             cnt_fail += 1
         continue
 if ENABLE_STATS_ANA:  # statistical analysis
-    print("[ALL] %d\n\t[SUCCESS] %d (full=%d, !full!tol=%d, tolerated=%d)\n\t[FAILURE] %d"
-          % (len(sample_res), cnt_success, cnt_suc_full, cnt_suc_not_full_not_tol, cnt_suc_tol, cnt_fail))
+    print(
+        "[ALL] %d\n"
+        "\t[SUCCESS] %d (full=%d, !full!tol=%d, tolerated=%d)\n\t\tLevels: 1=%d, 2=%d\n"
+        "\t[WRONG] %d\n\t[FAILURE] %d"
+        % (len(_iter_obj), cnt_success, cnt_suc_full, cnt_suc_not_full_not_tol, cnt_suc_tol,
+           cnt_suc_levels[1], cnt_suc_levels[2], cnt_wrong, cnt_fail))
 print()

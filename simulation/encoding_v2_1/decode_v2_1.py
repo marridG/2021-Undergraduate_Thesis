@@ -94,20 +94,20 @@ def _decode_handful_lines(lines_decoded: np.ndarray, cat_1_idx: int) -> Dict[str
     lines_decoded = lines_decoded[cat_1_line_idx:, :]
     cat_1_line_idx = 0
 
-    # [case 1] one line for category_1(LINE#1) only => end decoding
-    if 1 == lines_decoded.shape[0] and 0 == cat_1_line_idx:
+    # [case 1] one valid line for category_1(LINE#1) only => end decoding
+    if lines_are_full_length is False:
         return res
 
-    # [case 2] two lines for category_1(LINE#1) and category_2(LINE#0) => continue decoding
+    # [case 2] two valid lines for category_1(LINE#1) and category_2(LINE#0) => continue decoding
     cat_2_bin = lines_decoded[0] ^ lines_decoded[1]
-    cat_2_idx = pattern_v2_1.non_dup_bin_2_dec(num=cat_2_bin, category_1_idx=cat_1_idx, is_category_2=True)
+    cat_2_idx, _ = pattern_v2_1.non_dup_bin_2_dec(num=cat_2_bin, category_1_idx=cat_1_idx, is_category_2=True)
     res["category_2"] = cat_2_idx
     return res
 
 
 def decode(sign_data_obj: TrafficSignsData,
            points: np.ndarray,
-           hori_margin: float, vert_margin: float,
+           hori_margin: int, vert_margin: int,
            height: int, width: int,
            tolerable: Optional[bool] = False) -> Tuple[Dict[str, int], Dict[str, str]]:
     assert 0 == np.nanmin(points)
@@ -143,25 +143,39 @@ def decode(sign_data_obj: TrafficSignsData,
         schema_length = schema["length"]
         schema_width = schema["width"]
         schema_all_patterns = schema["patterns"]
-        for _hori in range(int(hori_margin)):  # horizontal starting location
+        for _hori in range(min(width * 2, hori_margin)):  # horizontal starting location
             _lines_decoded = []  # <list>of<np.ndarray>
             _pattern_found_src_idx = set()  # to filter out those found multiple patterns
             _lines_decoded_pattern_found_idx = []  # [ (line_idx, pattern_idx, starting_idx_in_line), ...]
             for __line in points:
-                __line_data = __line[np.where(False == np.isnan(__line))]  # Note: np.nan != np.nan
+                __line_data = __line[np.where(False == np.isnan(__line))]  # remove nan-s (Note: np.nan != np.nan)
                 if 0 == len(__line_data):
                     _lines_decoded.append(np.array([], dtype=int))
                     continue
                 __line_loc = np.arange(_hori, _hori + len(__line_data) * hori_margin, hori_margin)
                 __line_decoded = utils.decode_one_line(points=__line_data, points_loc=__line_loc, width=schema_width)
 
-                # search for possibly existing category_1 patterns
-                for ___pattern_idx, ___pattern in enumerate(schema_all_patterns):  # each as <np.ndarray)>
-                    ___match_res, ___match_idx = _search_bin_array_patterns(seq=__line_decoded, pat=___pattern)
-                    if ___match_res is True:
-                        _lines_decoded_pattern_found_idx.append({
-                            "line": len(_lines_decoded), "pat_idx": ___pattern_idx, "loc": ___match_idx})
-                        _pattern_found_src_idx.add(___pattern_idx)
+                # search for possibly existing category_1 patterns if necessary
+                if True:  # 0 == len(_pattern_found_src_idx):
+                    for ___pattern_idx, ___pattern in enumerate(schema_all_patterns):  # each as <np.ndarray)>
+                        ___match_res, ___match_idx = _search_bin_array_patterns(seq=__line_decoded, pat=___pattern)
+                        if ___match_res is True:
+                            # newly added criterion (2022/04/03):
+                            #   bits before the staring of the found pattern must all be 1s AND
+                            #   bits after the ending of the found pattern must all be 1s
+                            if all(1 == __line_decoded[:___match_idx]) is False:
+                                continue
+                            if all(1 == __line_decoded[___match_idx + len(___pattern):]) is False:
+                                continue
+                            # newly added criterion (2022/04/04):
+                            #   bits above the line of the found pattern must all be 1s
+                            __lines_above_bits_cnt = np.sum([len(__line_above) for __line_above in _lines_decoded])
+                            __lines_above_ones_cnt = np.sum([np.sum(__line_above) for __line_above in _lines_decoded])
+                            if __lines_above_bits_cnt != __lines_above_ones_cnt:
+                                continue
+                            _lines_decoded_pattern_found_idx.append({
+                                "line": len(_lines_decoded), "pat_idx": ___pattern_idx, "loc": ___match_idx})
+                            _pattern_found_src_idx.add(___pattern_idx)
                 _lines_decoded.append(__line_decoded)
 
             #  omit horizontal_starting_loc if NO category_1 patterns are found
@@ -187,9 +201,10 @@ def decode(sign_data_obj: TrafficSignsData,
     # === remove decoded on-board-only points
     hori_plans_sliced = []
     for _plan_idx, _plan in enumerate(hori_plans):
+        _plan_schema_length = _plan["schema"]
         _plan_dec = _plan["lines_decoded"]  # [<np.ndarray>s]
         _plan_dec_pat = _plan["lines_decoded_patterns_found_idx"][0]  # {"line": 2, "pat_idx":1, "loc":2}
-        _plan_dec_slice = [__line[_plan_dec_pat["loc"]:_plan_dec_pat["loc"] + pattern_v2_1.ENCODING_LENGTH]
+        _plan_dec_slice = [__line[_plan_dec_pat["loc"]:_plan_dec_pat["loc"] + _plan_schema_length]
                            for __line in _plan_dec]
         _plan["lines_decoded_sliced"] = _plan_dec_slice
         hori_plans_sliced.append(_plan)
@@ -246,8 +261,9 @@ def decode(sign_data_obj: TrafficSignsData,
             # omit impossibility: max lines cnt on encoding NOT sufficient for the levels extracted
             if _fields_cnt > max_cnt_encoding_vert_pt:
                 continue
-            # omit impossibility: levels extracted not complete for the min lines cnt on encoding
-            if _fields_cnt < min(2, max_cnt_encoding_vert_pt - 1):
+            # omit impossibility: levels extracted not complete for the min lines&length cnt on encoding
+            if _fields_cnt < min(2, max_cnt_encoding_vert_pt - 1) and \
+                    _fields_cnt < (max_cnt_encoding_hori_pt - 1) // pattern_v2_1.ENCODING_PATTERN_LENGTH:
                 continue
             _res_decoded.append(_decode_res)
             _res_decoded_info.append(_decode_res_info)
