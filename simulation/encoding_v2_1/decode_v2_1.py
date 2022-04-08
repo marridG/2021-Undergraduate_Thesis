@@ -143,7 +143,7 @@ def decode(sign_data_obj: TrafficSignsData,
         schema_length = schema["length"]
         schema_width = schema["width"]
         schema_all_patterns = schema["patterns"]
-        for _hori in range(min(width * 2, hori_margin)):  # horizontal starting location
+        for _hori in range(min(schema_width, hori_margin)):  # horizontal starting location
             _lines_decoded = []  # <list>of<np.ndarray>
             _pattern_found_src_idx = set()  # to filter out those found multiple patterns
             _lines_decoded_pattern_found_idx = []  # [ (line_idx, pattern_idx, starting_idx_in_line), ...]
@@ -293,10 +293,12 @@ def decode(sign_data_obj: TrafficSignsData,
         del _res_dec_all_cat_1
         # merge tolerated if is successful
         if _res_decoded_tol_success is True:
-            _res_decoded = [_res_decoded_tol]
-            _res_decoded_info_tol["is_complete"] = (_res_decoded_info_tol["category_1"] is not None) and \
-                                                   (_res_decoded_info_tol["category_2"] is not None)
+            _res_decoded_info_tol["is_complete"] = (_res_decoded_tol["category_1"] is not None) and \
+                                                   (_res_decoded_tol["category_2"] is not None)
+            # if _res_decoded_info_tol["is_complete"] is True:
+            #     print()
             _res_decoded_info_tol["is_tolerated"] = True
+            _res_decoded = [_res_decoded_tol]
             _res_decoded_info = [_res_decoded_info_tol]
 
     if 1 < len(_res_decoded):
