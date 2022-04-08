@@ -15,9 +15,10 @@ data_sample = data_obj.get_sample(category_idx=1, sign_idx=85)
 print(data_sample)
 
 # encode the sampled traffic sign
-data_sample_encoding = encode(sample=data_sample)
+USE_SCALED_HEIGHT = True
+data_sample_encoding = encode(sample=data_sample, use_scaled_height=USE_SCALED_HEIGHT)
 print(data_sample_encoding)
-height, width = 600, 100  # milli-meters
+height, width = 400 if USE_SCALED_HEIGHT else 600, 100  # milli-meters
 data_sample_raw_bar = utils.encoding_2_raw_bar(encoding=data_sample_encoding,
                                                elem_height=height, elem_width=width)
 
@@ -30,7 +31,7 @@ sign_board_obj.place_encoding(encoding=data_sample_raw_bar)
 sign_board_obj.render().savefig("./canvas_v2_1.png")
 
 # sample points on the canvas
-distance = 120  # meters
+distance = 50  # meters
 hori_angle_resol, vert_angle_resol = 0.1, 0.33
 pt_sample_obj = LiDARSampling(canvas=sign_board_obj,
                               hori_angle_resol=hori_angle_resol, vert_angle_resol=vert_angle_resol)
