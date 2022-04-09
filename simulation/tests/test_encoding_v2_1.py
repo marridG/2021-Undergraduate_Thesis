@@ -1,5 +1,6 @@
-from tqdm import tqdm
 import math
+from tqdm import tqdm
+import json
 
 from data_v2.taffic_signs import TrafficSignsData
 from sign_boards import TrafficSignBoard
@@ -9,29 +10,65 @@ from encoding_v2_1.decode_v2_1 import decode
 import utils
 from simulation.exceptions import *
 
+ALL_SETTINGS = {
+    "tri11": {
+        "sample": {"category": 1, "sign": 85},
+        "canvas": {"height": 1150, "width": 1350},
+        "board": {"shape": "triangle", "kwargs": {"tri_length": 1300}},
+        "encoding": {"scaled": True, "height": 221, "width": 67, "orientation": "bottom"},
+    },  # Triangle (*1300): Scaled Height + 3.3 Ratio (221*67)
+    "cir11": {
+        "sample": {"category": 1, "sign": 85},
+        "canvas": {"height": 1250, "width": 1250},
+        "board": {"shape": "circle", "kwargs": {"cir_radius": 600}},
+        "encoding": {"scaled": True, "height": 311, "width": 94, "orientation": "center"},
+    },  # Circle (*600): Scaled Height + 3.3 Ratio (311*94)
+
+    "rect11": {
+        "sample": {"category": 1, "sign": 85},
+        "canvas": {"height": 1300, "width": 1300},
+        "board": {"shape": "rectangle", "kwargs": {"rect_height": 1200, "rect_width": 1200}},
+        "encoding": {"scaled": True, "height": 400, "width": 121, "orientation": "center"},
+    },  # Rectangle (1300*1300): Scaled Height + 3.3 Ratio (400*121)
+    "rect10": {
+        "sample": {"category": 1, "sign": 85},
+        "canvas": {"height": 1300, "width": 1300},
+        "board": {"shape": "rectangle", "kwargs": {"rect_height": 1200, "rect_width": 1200}},
+        "encoding": {"scaled": True, "height": 400, "width": 100, "orientation": "center"},
+    },  # Rectangle (1300*1300): Scaled Height, NO Ratio (400*100)
+    "rect00": {
+        "sample": {"category": 1, "sign": 85},
+        "canvas": {"height": 1300, "width": 1300},
+        "board": {"shape": "rectangle", "kwargs": {"rect_height": 1200, "rect_width": 1200}},
+        "encoding": {"scaled": False, "height": 600, "width": 100, "orientation": "center"},
+    },  # Rectangle (1300*1300): NO Scaled Height, NO Ratio (600*100)
+}
+
+setting = ALL_SETTINGS["rect11"]
+print(json.dumps(setting, indent=2))
+
 # sample a traffic sign
 data_obj = TrafficSignsData()
 data_sample = data_obj.get_sample(category_idx=1, sign_idx=85)
 print(data_sample)
 
 # encode the sampled traffic sign
-USE_SCALED_HEIGHT = True
-data_sample_encoding = encode(sample=data_sample, use_scaled_height=USE_SCALED_HEIGHT)
+data_sample_encoding = encode(sample=data_sample, use_scaled_height=setting["encoding"]["scaled"])
 print(data_sample_encoding)
-height, width = 400 if USE_SCALED_HEIGHT else 600, 100  # milli-meters
+height, width = setting["encoding"]["height"], setting["encoding"]["width"]  # milli-meters
 data_sample_raw_bar = utils.encoding_2_raw_bar(encoding=data_sample_encoding,
                                                elem_height=height, elem_width=width)
 
 # test draw rectangle
-sign_board_obj = TrafficSignBoard(1300, 1300)
-sign_board_obj.draw_sign_board(shape="rectangle", rect_height=1200, rect_width=1200)
+sign_board_obj = TrafficSignBoard(height=setting["canvas"]["height"], width=setting["canvas"]["width"])
+sign_board_obj.draw_sign_board(shape=setting["board"]["shape"], **setting["board"]["kwargs"])
 
-sign_board_obj.place_encoding(encoding=data_sample_raw_bar)
+sign_board_obj.place_encoding(encoding=data_sample_raw_bar, orientation=setting["encoding"]["orientation"])
 # sign_board_obj.render().show()
 sign_board_obj.render().savefig("./canvas_v2_1.png")
 
 # sample points on the canvas
-distance = 50  # meters
+distance = 130  # meters
 hori_angle_resol, vert_angle_resol = 0.1, 0.33
 pt_sample_obj = LiDARSampling(canvas=sign_board_obj,
                               hori_angle_resol=hori_angle_resol, vert_angle_resol=vert_angle_resol)
