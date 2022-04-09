@@ -13,6 +13,9 @@ class VisualCanvas:
         self.color_dark = (0, 0, 255)  # blue
 
         self.canvas = np.full((height, width, 3), self.color_unfilled, dtype=int)  # RGB
+        self.canvas_layers = [
+            np.full_like(self.canvas, True, dtype=bool)
+        ]  # values of each layer are either True or False, acting like a mask
         print("Canvas Initialized with Color RGB =", self.color_unfilled,
               "and Shape (height, width, channel) =", self.canvas.shape)
 
@@ -23,6 +26,7 @@ class VisualCanvas:
         """
         assert layer_data.shape == (self.height, self.width, 3)
         assert np.max(layer_data) <= 255 and np.min(layer_data) + 99 >= 0  # note, -99 for unfilled pixels
+
         layer_data = layer_data.astype(int)
 
         _layer_filled_ref = np.where(layer_data >= 0)
@@ -31,6 +35,11 @@ class VisualCanvas:
         # print(self.canvas[_layer_filled_ref].shape)
         # print(self.canvas.shape)
         # print(self.canvas)
+
+        # construct layer mask
+        mask = np.full_like(self.canvas, False, dtype=bool)
+        mask[_layer_filled_ref] = True
+        self.canvas_layers.append(mask)
 
     def get_canvas_data(self) -> np.ndarray:
         return self.canvas
