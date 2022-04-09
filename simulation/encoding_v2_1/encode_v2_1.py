@@ -15,7 +15,7 @@ def encode(sample: Dict[str, Union[str, None, int, Dict[str, int]]],
                                 the vertical height of cat_1/cat_2 should be 2:1)
     :return:                binary representation of the given sample
     """
-    print("Start Generating Binary Encodings %s..." % "" if not use_scaled_height else "(Using Scaled Height)")
+    print("Start Generating Binary Encodings %s..." % ("" if not use_scaled_height else "(Using Scaled Height)"))
     res_length = pattern_v2_1.ENCODING_LENGTH
     res_rows = pattern_v2_1.ENCODING_LEVELS if use_scaled_height is False else pattern_v2_1.ENCODING_LEVELS + 1
     res = np.full((res_rows, res_length), -1, dtype=int)
