@@ -44,7 +44,7 @@ ALL_SETTINGS = {
     },  # Rectangle (1300*1300): NO Scaled Height, NO Ratio (600*100)
 }
 
-setting = ALL_SETTINGS["rect11"]
+setting = ALL_SETTINGS["rect00"]
 print(json.dumps(setting, indent=2))
 
 # sample a traffic sign
@@ -68,7 +68,7 @@ sign_board_obj.place_encoding(encoding=data_sample_raw_bar, orientation=setting[
 sign_board_obj.render().savefig("./canvas_v2_1.png")
 
 # sample points on the canvas
-distance = 130  # meters
+distance = 140  # meters
 hori_angle_resol, vert_angle_resol = 0.1, 0.33
 pt_sample_obj = LiDARSampling(canvas=sign_board_obj,
                               hori_angle_resol=hori_angle_resol, vert_angle_resol=vert_angle_resol)

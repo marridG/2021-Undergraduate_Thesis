@@ -92,7 +92,6 @@ def _decode_handful_lines(lines_decoded: np.ndarray, cat_1_idx: int) -> Dict[str
 
     # remove all lines above the line representing the category_1
     lines_decoded = lines_decoded[cat_1_line_idx:, :]
-    cat_1_line_idx = 0
 
     # [case 1] one valid line for category_1(LINE#1) only => end decoding
     if lines_are_full_length is False:
@@ -145,14 +144,22 @@ def decode(sign_data_obj: TrafficSignsData,
         schema_all_patterns = schema["patterns"]
         for _hori in range(min(schema_width, hori_margin)):  # horizontal starting location
             _lines_decoded = []  # <list>of<np.ndarray>
+            _lines_decoded_start_loc = []  # <list>of<int>
             _pattern_found_src_idx = set()  # to filter out those found multiple patterns
             _lines_decoded_pattern_found_idx = []  # [ (line_idx, pattern_idx, starting_idx_in_line), ...]
             for __line in points:
-                __line_data = __line[np.where(False == np.isnan(__line))]  # remove nan-s (Note: np.nan != np.nan)
-                if 0 == len(__line_data):
+                __line_not_nan_idx = np.where(False == np.isnan(__line))
+                # continue
+                if 0 == len(__line_not_nan_idx[0]):
                     _lines_decoded.append(np.array([], dtype=int))
+                    _lines_decoded_start_loc.append(-1)
                     continue
-                __line_loc = np.arange(_hori, _hori + len(__line_data) * hori_margin, hori_margin)
+                __line_data = __line[__line_not_nan_idx]  # remove nan-s (Note: np.nan != np.nan)
+                __line_nan_cnt_head = __line_not_nan_idx[0][0] - 0
+                # __line_nan_cnt_tail = (len(__line) - 1) - __line_not_nan_idx[0][-1]
+                __line_loc_board_start = _hori + __line_nan_cnt_head * hori_margin
+                __line_loc = np.arange(__line_loc_board_start,
+                                       __line_loc_board_start + len(__line_data) * hori_margin, hori_margin)
                 __line_decoded = utils.decode_one_line(points=__line_data, points_loc=__line_loc, width=schema_width)
 
                 # search for possibly existing category_1 patterns if necessary
@@ -176,7 +183,9 @@ def decode(sign_data_obj: TrafficSignsData,
                             _lines_decoded_pattern_found_idx.append({
                                 "line": len(_lines_decoded), "pat_idx": ___pattern_idx, "loc": ___match_idx})
                             _pattern_found_src_idx.add(___pattern_idx)
+
                 _lines_decoded.append(__line_decoded)
+                _lines_decoded_start_loc.append(__line_loc_board_start)
 
             #  omit horizontal_starting_loc if NO category_1 patterns are found
             if 0 == len(_lines_decoded_pattern_found_idx):
@@ -191,6 +200,7 @@ def decode(sign_data_obj: TrafficSignsData,
                 "patterns_found_cnt": len(_lines_decoded_pattern_found_idx),
                 "patterns_found_category": _pattern_found_src_idx.pop(),
                 "lines_decoded": _lines_decoded,
+                "lines_decoded_start_loc": _lines_decoded_start_loc,
                 "lines_decoded_patterns_found_idx": _lines_decoded_pattern_found_idx,
             })
 
@@ -203,12 +213,29 @@ def decode(sign_data_obj: TrafficSignsData,
     for _plan_idx, _plan in enumerate(hori_plans):
         _plan_schema_length = _plan["schema"]
         _plan_dec = _plan["lines_decoded"]  # [<np.ndarray>s]
+        _plan_dec_start = _plan["lines_decoded_start_loc"]
         _plan_dec_pat = _plan["lines_decoded_patterns_found_idx"][0]  # {"line": 2, "pat_idx":1, "loc":2}
-        _plan_dec_slice = [__line[_plan_dec_pat["loc"]:_plan_dec_pat["loc"] + _plan_schema_length]
-                           for __line in _plan_dec]
+        # # simple version for rectangle sign boards
+        # _plan_dec_slice = [__line[_plan_dec_pat["loc"]:_plan_dec_pat["loc"] + _plan_schema_length]
+        #                    for __line in _plan_dec]
+        _plan_dec_slice = []
+        # _plan_dec_pat_line_len = len(_plan_dec[_plan_dec_pat["line"]])
+        _plan_dec_pat_line_start_bar_idx = np.floor(_plan_dec_start[_plan_dec_pat["line"]] / (1.0 * width)).astype(int)
+        for __line_idx, __line in enumerate(_plan_dec):
+            if len(__line) < _plan_schema_length:
+                continue
+            __line_start_bar_idx = np.floor(_plan_dec_start[__line_idx] / (1.0 * width)).astype(int)
+            __line_loc_bar_delta = __line_start_bar_idx - _plan_dec_pat_line_start_bar_idx
+            __line_start_loc = _plan_dec_pat["loc"] - __line_loc_bar_delta
+            __line_end_loc = __line_start_loc + _plan_schema_length
+            # __line_start_loc = _plan_dec_pat["loc"] - (_plan_dec_pat_line_len - len(__line)) // 2
+            # __line_end_loc = __line_start_loc + _plan_schema_length
+            if __line_start_loc > len(__line) - _plan_schema_length or __line_end_loc > len(__line):
+                continue
+            __line_sliced = __line[__line_start_loc:__line_end_loc]
+            _plan_dec_slice.append(__line_sliced)
         _plan["lines_decoded_sliced"] = _plan_dec_slice
         hori_plans_sliced.append(_plan)
-    pass
 
     # === merge all horizontal starting locations that lead to the same decoded results
     def _hori_plan_are_equal(plan_1: dict, plan_2: dict) -> bool:
@@ -246,7 +273,10 @@ def decode(sign_data_obj: TrafficSignsData,
         _hori_res = [__line for __line in _hori_res if 0 != len(__line)]
         print(end="")  # CHECKPOINT: focus on variable `_hori_res`
         # === merge lines
-        _vert_res = _merge_lines(lines_decoded=_hori_res)
+        try:
+            _vert_res = _merge_lines(lines_decoded=_hori_res)
+        except DecodeFailureVert:
+            continue
         print(end="")  # CHECKPOINT: focus on variable `_vert_res`
         # === actual decoder: handful decoded lines data to sign board info
         _decode_res = _decode_handful_lines(lines_decoded=_vert_res, cat_1_idx=_res_category_1_idx)

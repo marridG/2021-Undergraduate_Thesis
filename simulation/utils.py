@@ -61,8 +61,9 @@ def encoding_2_raw_bar(encoding: np.ndarray, elem_height: int, elem_width: int) 
 
     for _h_idx in range(encoding.shape[0]):
         for _w_idx in range(encoding.shape[1]):
-            res[_h_idx * elem_height:(_h_idx + 1) * elem_height, _w_idx * elem_width:(_w_idx + 1) * elem_width
-            ] = encoding[_h_idx, _w_idx]
+            _loc_h_start, _loc_h_end = _h_idx * elem_height, (_h_idx + 1) * elem_height
+            _loc_w_start, _loc_w_end = _w_idx * elem_width, (_w_idx + 1) * elem_width
+            res[_loc_h_start:_loc_h_end, _loc_w_start:_loc_w_end] = encoding[_h_idx, _w_idx]
 
     return res
 
@@ -79,11 +80,13 @@ def decode_one_line(points: np.ndarray, points_loc: np.ndarray, width: int):
     """
     assert 1 == len(points.shape)
     assert len(points) > 0
+    assert points.shape == points_loc.shape
     assert False == np.isnan(np.max(points))  # make sure no nan values
 
     # map points to bars, by their locations
     pt_bar_idx = points_loc / (1.0 * width)
     pt_bar_idx = np.floor(pt_bar_idx).astype(int)
+    pt_bar_idx -= np.min(pt_bar_idx)
     pt_bar_cnt = np.max(pt_bar_idx) - np.min(pt_bar_idx) + 1
 
     # merge values of the same bar
