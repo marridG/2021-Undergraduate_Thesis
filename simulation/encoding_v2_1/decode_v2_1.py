@@ -109,7 +109,8 @@ def decode(sign_data_obj: TrafficSignsData,
            hori_margin: int, vert_margin: int,
            height: int, width: int,
            tolerable: Optional[bool] = False) -> Tuple[Dict[str, int], Dict[str, str]]:
-    assert 0 == np.nanmin(points)
+    if 0 != np.nanmin(points).astype(int):
+        raise DecodeFailure("No Sampled Points are Translated to 0")
 
     # === calculate the number of points on the encoding part
     max_cnt_encoding_hori_pt = np.floor(width * 1. * pattern_v2_1.ENCODING_LENGTH / hori_margin).astype(int) + 1
