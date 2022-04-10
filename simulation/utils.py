@@ -88,6 +88,7 @@ def decode_one_line(points: np.ndarray, points_loc: np.ndarray, width: int):
     pt_bar_idx = np.floor(pt_bar_idx).astype(int)
     pt_bar_idx -= np.min(pt_bar_idx)
     pt_bar_cnt = np.max(pt_bar_idx) - np.min(pt_bar_idx) + 1
+    assert 0 != pt_bar_cnt
 
     # merge values of the same bar
     _pt_bar_val_accum = np.zeros(pt_bar_cnt, dtype=int)  # accumulate values
