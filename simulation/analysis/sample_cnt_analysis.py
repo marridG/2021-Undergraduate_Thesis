@@ -79,7 +79,7 @@ for idx in range(len(keys)):
 ax.set_yticks(z_locs), ax.set_yticklabels(keys)
 ax.set_xlabel('Location #'), ax.set_ylabel('Delta Values'), ax.set_zlabel('CNT of Delta Values')
 ax.view_init(28, 141)
-fig.suptitle("CNT of Delta Categories (Right - Left)")  # , color='red')
+fig.suptitle("CNT of Delta Categories at All Distances (Right - Left)")  # , color='red')
 plt.legend()
 # plt.show()
 plt.savefig("sample_cnt_analysis__cnt_cnt_cat.png")
@@ -102,7 +102,7 @@ for key in all_cnt_delta_info.keys():
 
     # Customize the z axis.
     ax.set_xlabel("Location #"), ax.set_ylabel("Distance / m")
-    ax.set_zlabel("Max Delta")
+    ax.set_zlabel("%s Delta" % (key.capitalize()))
     ax.set_zticks([-1, 0, 1])
     ax.view_init(20, 11)
     fig.colorbar(surf, shrink=0.5, aspect=5)
