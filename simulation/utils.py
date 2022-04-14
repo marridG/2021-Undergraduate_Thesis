@@ -70,12 +70,14 @@ def encoding_2_raw_bar(encoding: np.ndarray, elem_height: int, elem_width: int) 
 
 # === for decoding-related operations ===
 
-def decode_one_line(points: np.ndarray, points_loc: np.ndarray, width: int):
+def decode_one_line(points: np.ndarray, points_loc: np.ndarray, width: int, use_cnt_delta: bool) \
+        -> None or np.ndarray:
     """
     General decoder to "combine" DETECTED horizontal digits into the fixed length of encodings
     :param points:          samples of binary values (0/1)
     :param points_loc:      location of the samples of binary values (in milli-meters)
     :param width:           width of each digit in the horizontal sequence (in milli-meters)
+    :param use_cnt_delta:   whether to use the delta info of the numbers of points in adjacent bars
     :return:                "combined" sequence of bars, given as type <int>
     """
     assert 1 == len(points.shape)
@@ -96,6 +98,13 @@ def decode_one_line(points: np.ndarray, points_loc: np.ndarray, width: int):
     for _val, _idx in zip(points, pt_bar_idx):
         _pt_bar_val_accum[_idx] += _val
         _pt_bar_pt_cnt[_idx] += 1
+
+    # judge cnt delta if used
+    if use_cnt_delta:
+        _delta = _pt_bar_pt_cnt[1:] - _pt_bar_pt_cnt[:-1]  # delta = right - left]
+        if 0 != _delta.size:
+            if np.abs(np.max(_delta)) > 1 or np.abs(np.min(_delta)) > 1:
+                return None
 
     res = _pt_bar_val_accum * 1.0 / _pt_bar_pt_cnt
     res = np.round(res).astype(int)
