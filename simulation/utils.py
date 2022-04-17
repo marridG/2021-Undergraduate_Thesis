@@ -107,6 +107,9 @@ def decode_one_line(points: np.ndarray, points_loc: np.ndarray, width: int, use_
                 return None
 
     res = _pt_bar_val_accum * 1.0 / _pt_bar_pt_cnt
+    # _pt_bar_pt_cnt[np.where(0 == _pt_bar_pt_cnt)] = -99  # to avoid divide-by-zero problem
+    # res = _pt_bar_val_accum * 1.0 / _pt_bar_pt_cnt
+    # res[np.where(0.5 == res)] = 1  # added on 04/16
     res = np.round(res).astype(int)
 
     return res
