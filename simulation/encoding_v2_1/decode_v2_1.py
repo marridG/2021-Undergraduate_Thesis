@@ -7,6 +7,50 @@ from simulation.exceptions import *
 from encoding_v2_1 import pattern_v2_1, substring_match_BM
 
 
+def _decode_one_line(points: np.ndarray, points_loc: np.ndarray, width: int, use_cnt_delta: bool) \
+        -> (None, None) or (np.ndarray, np.ndarray):
+    """
+    doc todo: General decoder to "combine" DETECTED horizontal digits into the fixed length of encodings
+    :param points:          samples of binary values (0/1)
+    :param points_loc:      location of the samples of binary values (in milli-meters)
+    :param width:           width of each digit in the horizontal sequence (in milli-meters)
+    :param use_cnt_delta:   whether to use the delta info of the numbers of points in adjacent bars
+    :return:                "combined" sequence of bars, given as type <int>
+    """
+    assert 1 == len(points.shape)
+    assert len(points) > 0
+    assert points.shape == points_loc.shape
+    assert False == np.isnan(np.max(points))  # make sure no nan values
+
+    # map points to bars, by their locations
+    pt_bar_idx = points_loc / (1.0 * width)
+    pt_bar_idx = np.floor(pt_bar_idx).astype(int)
+    pt_bar_idx -= np.min(pt_bar_idx)
+    pt_bar_cnt = np.max(pt_bar_idx) - np.min(pt_bar_idx) + 1
+    assert 0 != pt_bar_cnt
+
+    # merge values of the same bar
+    _pt_bar_val_accum = np.zeros(pt_bar_cnt, dtype=int)  # accumulate values
+    _pt_bar_pt_cnt = np.zeros(pt_bar_cnt, dtype=int)  # as counter
+    for _val, _idx in zip(points, pt_bar_idx):
+        _pt_bar_val_accum[_idx] += _val
+        _pt_bar_pt_cnt[_idx] += 1
+
+    # judge cnt delta if used
+    if use_cnt_delta:
+        _delta = _pt_bar_pt_cnt[1:] - _pt_bar_pt_cnt[:-1]  # delta = right - left]
+        if 0 != _delta.size:
+            if np.abs(np.max(_delta)) > 1 or np.abs(np.min(_delta)) > 1:
+                return None, None
+
+    _pt_bar_pt_cnt[np.where(0 == _pt_bar_pt_cnt)] = -99  # to avoid divide-by-zero problem
+    res = _pt_bar_val_accum * 1.0 / _pt_bar_pt_cnt
+    res[np.where(0.5 == res)] = 1  # added on 04/16
+    res = np.round(res).astype(int)
+
+    return res, pt_bar_idx
+
+
 def _search_bin_array_patterns(seq: np.ndarray, pat: np.ndarray) -> (bool, int):
     """
     search for the given category_1 patterns in the given sequence, both represented as <np.ndarray>
@@ -21,7 +65,7 @@ def _search_bin_array_patterns(seq: np.ndarray, pat: np.ndarray) -> (bool, int):
     if len(pat) > len(seq):
         return False, -1
 
-    seq_str = "".join([str(i) for i in seq])
+    seq_str = "".join([str(i) for i in seq[np.where((0 == seq) | (1 == seq))]])
     pat_str = "".join([str(i) for i in pat])
     match_idx = substring_match_BM.match(text=seq_str, pattern=pat_str)
     if -1 == match_idx:
@@ -70,9 +114,10 @@ def _decode_handful_lines(lines_decoded: np.ndarray, cat_1_idx: int) -> Dict[str
                                     value is `None` if the corresponding key field cannot be decoded
                                     ("category_1" will never be `None`)
     """
-    assert pattern_v2_1.ENCODING_LEVELS + 2 >= lines_decoded.shape[0] > 0
+    assert pattern_v2_1.ENCODING_LEVELS >= lines_decoded.shape[0] > 0, \
+        "Lines Cnt Mismatch: Got %d" % lines_decoded.shape[0]
     assert (pattern_v2_1.ENCODING_PATTERN_LENGTH == lines_decoded.shape[1]) or \
-           (pattern_v2_1.ENCODING_LENGTH == lines_decoded.shape[1])
+           (pattern_v2_1.ENCODING_LENGTH == lines_decoded.shape[1]), "Length Mismatch: Got %d" % lines_decoded.shape[1]
 
     lines_decoded = lines_decoded.astype(int)
     lines_are_full_length = (pattern_v2_1.ENCODING_LENGTH == lines_decoded.shape[1])  # length lead to pattern
@@ -93,7 +138,7 @@ def _decode_handful_lines(lines_decoded: np.ndarray, cat_1_idx: int) -> Dict[str
     lines_decoded = lines_decoded[cat_1_line_idx:, :]
 
     # [case 1] one valid line for category_1(LINE#1) only => end decoding
-    if lines_are_full_length is False or lines_decoded.shape[0] < 2:
+    if lines_are_full_length is False or lines_decoded.shape[0] < pattern_v2_1.ENCODING_LEVELS:
         return res
 
     # [case 2] two valid lines for category_1(LINE#1) and category_2(LINE#0) => continue decoding
@@ -107,8 +152,9 @@ def decode(sign_data_obj: TrafficSignsData,
            points: np.ndarray,
            hori_margin: int, vert_margin: int,
            height: int, width: int,
-           use_cnt_delta: bool, use_all_ones: bool,
-           tolerable: Optional[bool] = False, ) -> Tuple[Dict[str, int], Dict[str, str]]:
+           use_cnt_delta: bool,
+           tolerable: Optional[bool] = False, ) \
+        -> Tuple[Dict[str, int], Dict[str, str], Dict[str, Dict[str, int]]]:
     if 0 != np.nanmin(points).astype(int):
         raise DecodeFailure("No Sampled Points are Translated to 0")
 
@@ -137,152 +183,208 @@ def decode(sign_data_obj: TrafficSignsData,
         decode_schemas = [{"length": pattern_v2_1.ENCODING_LENGTH,
                            "width": width, "patterns": all_bin_patterns_full}]
 
-    # === generate all possible location combinations, by the horizontal starting location
+    # === extract the code part only, by the horizontal starting location of the whole canvas
     hori_plans = []  # CHECKPOINT: focus on variable `decode_schemas`
     for schema in decode_schemas:
         schema_length = schema["length"]
         schema_width = schema["width"]
         schema_all_patterns = schema["patterns"]
-        for _hori in range(min(schema_width, hori_margin)):  # horizontal starting location
-            _lines_success = True
-            _lines_decoded = []  # <list>of<np.ndarray>
-            _lines_decoded_start_loc = []  # <list>of<int>
-            _pattern_found_src_idx = set()  # to filter out those found multiple patterns
-            _lines_decoded_pattern_found_idx = []  # [ (line_idx, pattern_idx, starting_idx_in_line), ...]
-            for __line in points:
+        for _hori in range(max(schema_width, hori_margin)):  # horizontal starting location
+            _lines_success = False
+            _lines_pat_found = {}  # {"cat": -1, "line": -1, "loc": [-1, -1]}
+            for __line_idx, __line in enumerate(points):
                 __line_not_nan_idx = np.where(False == np.isnan(__line))
-                # continue
-                if 0 == len(__line_not_nan_idx[0]):
-                    _lines_decoded.append(np.array([], dtype=int))
-                    _lines_decoded_start_loc.append(-1)
+                if 0 == len(__line_not_nan_idx[0]) or schema_length > len(__line_not_nan_idx[0]):
                     continue
-                __line_data = __line[__line_not_nan_idx]  # remove nan-s (Note: np.nan != np.nan)
                 __line_nan_cnt_head = __line_not_nan_idx[0][0] - 0
-                # __line_nan_cnt_tail = (len(__line) - 1) - __line_not_nan_idx[0][-1]
-                __line_loc_board_start = _hori + __line_nan_cnt_head * hori_margin
+                __line_data = __line[__line_not_nan_idx]  # remove nan-s (Note: np.nan != np.nan)
+                __line_loc_board_start = _hori
                 __line_loc = np.arange(__line_loc_board_start,
                                        __line_loc_board_start + len(__line_data) * hori_margin, hori_margin)
-                __line_decoded = utils.decode_one_line(points=__line_data, points_loc=__line_loc,
-                                                       width=schema_width, use_cnt_delta=use_cnt_delta)
+                __line_decoded, __line_pts_bar_idx = _decode_one_line(
+                    points=__line_data, points_loc=__line_loc,
+                    width=schema_width, use_cnt_delta=use_cnt_delta)
                 if __line_decoded is None:
-                    _lines_success = False
+                    continue
+
+                # search for possibly existing category_1 patterns
+                for ___pattern_idx, ___pattern in enumerate(schema_all_patterns):  # each as <np.ndarray)>
+                    ___match_res, ___match_idx = _search_bin_array_patterns(seq=__line_decoded, pat=___pattern)
+                    print(end="")
+                    if ___match_res is True:
+                        ___loc_bar_start = ___match_idx  # including
+                        ___loc_bar_end = ___loc_bar_start + schema_length - 1  # including
+                        # including
+                        ___loc_pt_start = np.where(__line_pts_bar_idx == ___loc_bar_start)[0]
+                        if 0 == len(___loc_pt_start):
+                            ___loc_pt_start = np.where(__line_pts_bar_idx > ___loc_bar_start)[0][0]
+                        else:
+                            ___loc_pt_start = ___loc_pt_start[0]
+                        # excluding
+                        ___loc_pt_end = np.where(__line_pts_bar_idx == ___loc_bar_end)[0]
+                        if 0 == len(___loc_pt_end):
+                            ___loc_bar_end_larger = \
+                                __line_pts_bar_idx[np.where(__line_pts_bar_idx > ___loc_bar_end)][0]
+                            ___loc_pt_end = np.where(__line_pts_bar_idx == ___loc_bar_end_larger)[0][-1]
+                        else:
+                            ___loc_pt_end = ___loc_pt_end[-1] + 1
+                        ___loc_pt_start += __line_nan_cnt_head
+                        ___loc_pt_end += __line_nan_cnt_head
+                        _lines_pat_found = {"cat": ___pattern_idx, "line": __line_idx,
+                                            "loc": [___loc_pt_start, ___loc_pt_end]}
+                        _lines_success = True
+                        break
+
+                if _lines_success is True:
                     break
 
-                # search for possibly existing category_1 patterns if necessary
-                if True:  # 0 == len(_pattern_found_src_idx):
-                    for ___pattern_idx, ___pattern in enumerate(schema_all_patterns):  # each as <np.ndarray)>
-                        ___match_res, ___match_idx = _search_bin_array_patterns(seq=__line_decoded, pat=___pattern)
-                        if ___match_res is True:
-                            if use_all_ones:
-                                # newly added criterion (2022/04/03):
-                                #   bits before the staring of the found pattern must all be 1s AND
-                                #   bits after the ending of the found pattern must all be 1s
-                                if all(1 == __line_decoded[:___match_idx]) is False:
-                                    continue
-                                if all(1 == __line_decoded[___match_idx + len(___pattern):]) is False:
-                                    continue
-                                # newly added criterion (2022/04/04):
-                                #   bits above the line of the found pattern must all be 1s
-                                __lines_above_bits_cnt = np.sum([len(__line_abv) for __line_abv in _lines_decoded])
-                                __lines_above_ones_cnt = np.sum([np.sum(__line_abv) for __line_abv in _lines_decoded])
-                                if __lines_above_bits_cnt != __lines_above_ones_cnt:
-                                    continue
-                            _lines_decoded_pattern_found_idx.append({
-                                "line": len(_lines_decoded), "pat_idx": ___pattern_idx, "loc": ___match_idx})
-                            _pattern_found_src_idx.add(___pattern_idx)
-
-                _lines_decoded.append(__line_decoded)
-                _lines_decoded_start_loc.append(__line_loc_board_start)
-
-            # omit horizontal_starting_loc if FAILED line-decoding exists
+            # omit horizontal_starting_loc if FAILED line-decoding exists or NO category_1 is found
             if _lines_success is False:
                 continue
-            # omit horizontal_starting_loc if NO category_1 patterns are found
-            if 0 == len(_lines_decoded_pattern_found_idx):
+
+            # otherwise, slice the original points and add to the possible plans
+            _pt_sliced = []
+            _sliced_len = _lines_pat_found["loc"][1] - _lines_pat_found["loc"][0]
+            for __line_idx, __line in enumerate(points):
+                if __line_idx < _lines_pat_found["line"]:
+                    continue
+                __line_sliced = __line[_lines_pat_found["loc"][0]:_lines_pat_found["loc"][1]]
+                if len(__line_sliced) < _sliced_len:
+                    continue
+                if 0 != len(np.where(True == np.isnan(__line_sliced))[0]):
+                    continue
+                _pt_sliced.append(__line_sliced)
+            _pt_sliced = np.array(_pt_sliced)
+            # further remove starting and ending columns that are all ones
+            _start_end_all_one_col_idx = set()
+            for __col_idx in range(_pt_sliced.shape[1]):  # from start
+                if np.sum(_pt_sliced[:, __col_idx]) == _pt_sliced.shape[0]:
+                    _start_end_all_one_col_idx.add(__col_idx)
+                else:
+                    break
+            for __col_idx in range(_pt_sliced.shape[1] - 1, 0 - 1, -1):  # from end
+                if np.sum(_pt_sliced[:, __col_idx]) == _pt_sliced.shape[0]:
+                    _start_end_all_one_col_idx.add(__col_idx)
+                else:
+                    break
+            _all_not_all_one_col_idx = []
+            for __col_idx in range(_pt_sliced.shape[1]):
+                if __col_idx not in _start_end_all_one_col_idx:
+                    _all_not_all_one_col_idx.append(__col_idx)
+            _pt_sliced_no_all_one_col = _pt_sliced[:, _all_not_all_one_col_idx]
+            if 0 == _pt_sliced_no_all_one_col.size:
                 continue
-            # omit horizontal_starting_loc if MULTIPLE (>=2) category_1 patterns are found
-            if 1 < len(_pattern_found_src_idx):
-                continue
-            # otherwise, add to the possible plans
+
             hori_plans.append({
-                "schema": schema_length,
-                "horizontal_starting_location": _hori,
-                "patterns_found_cnt": len(_lines_decoded_pattern_found_idx),
-                "patterns_found_category": _pattern_found_src_idx.pop(),
-                "lines_decoded": _lines_decoded,
-                "lines_decoded_start_loc": _lines_decoded_start_loc,
-                "lines_decoded_patterns_found_idx": _lines_decoded_pattern_found_idx,
+                "schema_length": schema_length,
+                "schema_width": schema_width,
+                "pattern_category": _lines_pat_found["cat"],
+                "pattern": schema_all_patterns[_lines_pat_found["cat"]],
+                "lines_sliced": _pt_sliced_no_all_one_col,
             })
 
     if 0 == len(hori_plans):  # CHECKPOINT: focus on variable `hori_plans`
-        raise DecodeFailureHori("No Possibilities")
-    pass
+        raise DecodeFailureHori("No Possibilities for Encoding Part Extraction")
 
-    # === remove decoded on-board-only points
-    hori_plans_sliced = []
-    for _plan_idx, _plan in enumerate(hori_plans):
-        _plan_schema_length = _plan["schema"]
-        _plan_dec = _plan["lines_decoded"]  # [<np.ndarray>s]
-        _plan_dec_start = _plan["lines_decoded_start_loc"]
-        _plan_dec_pat = _plan["lines_decoded_patterns_found_idx"][0]  # {"line": 2, "pat_idx":1, "loc":2}
-        # # simple version for rectangle sign boards
-        # _plan_dec_slice = [__line[_plan_dec_pat["loc"]:_plan_dec_pat["loc"] + _plan_schema_length]
-        #                    for __line in _plan_dec]
-        _plan_dec_slice = []
-        # _plan_dec_pat_line_len = len(_plan_dec[_plan_dec_pat["line"]])
-        _plan_dec_pat_line_start_bar_idx = np.floor(_plan_dec_start[_plan_dec_pat["line"]] / (1.0 * width)).astype(int)
-        for __line_idx, __line in enumerate(_plan_dec):
-            if len(__line) < _plan_schema_length:
-                continue
-            __line_start_bar_idx = np.floor(_plan_dec_start[__line_idx] / (1.0 * width)).astype(int)
-            __line_loc_bar_delta = __line_start_bar_idx - _plan_dec_pat_line_start_bar_idx
-            __line_start_loc = _plan_dec_pat["loc"] - __line_loc_bar_delta
-            __line_end_loc = __line_start_loc + _plan_schema_length
-            # __line_start_loc = _plan_dec_pat["loc"] - (_plan_dec_pat_line_len - len(__line)) // 2
-            # __line_end_loc = __line_start_loc + _plan_schema_length
-            __line_sliced = __line[__line_start_loc:__line_end_loc]
-            if schema_length != len(__line_sliced):
-                continue
-            _plan_dec_slice.append(__line_sliced)
-        _plan["lines_decoded_sliced"] = _plan_dec_slice
-        hori_plans_sliced.append(_plan)
-
-    # === merge all horizontal starting locations that lead to the same decoded results
+    # === merge all sliced results that are the same
     def _hori_plan_are_equal(plan_1: dict, plan_2: dict) -> bool:
-        if (plan_1["schema"] == plan_2["schema"]) is False:
+        if (plan_1["schema_length"] == plan_2["schema_length"]) is False:
             return False
-        if (plan_1["patterns_found_cnt"] == plan_2["patterns_found_cnt"]) is False:
+        if (plan_1["schema_width"] == plan_2["schema_width"]) is False:
             return False
-        if (plan_1["patterns_found_category"] == plan_2["patterns_found_category"]) is False:
-            return False
-        if (plan_1["lines_decoded_patterns_found_idx"] == plan_2["lines_decoded_patterns_found_idx"]) is False:
+        if (plan_1["pattern_category"] == plan_2["pattern_category"]) is False:
             return False
         return all([np.array_equal(i, j) for i, j in
-                    zip(plan_1["lines_decoded_sliced"], plan_2["lines_decoded_sliced"])])
+                    zip(plan_1["lines_sliced"], plan_2["lines_sliced"])])
 
-    hori_plans_sliced_merged = []  # CHECKPOINT: focus on variable `hori_plans_sliced`
-    for _plan in hori_plans_sliced:
+    hori_plans_merged = []
+    for _plan in hori_plans:
         _set_found = False
-        for __plan_set_idx, __plan_set in enumerate(hori_plans_sliced_merged):
+        for __plan_set in hori_plans_merged:
             if _hori_plan_are_equal(_plan, __plan_set) is True:
                 _set_found = True
-                hori_plans_sliced_merged[__plan_set_idx]["horizontal_starting_location"].append(
-                    _plan["horizontal_starting_location"])
                 break
         if _set_found is False:
-            _plan["horizontal_starting_location"] = [_plan["horizontal_starting_location"]]
-            hori_plans_sliced_merged.append(_plan)
+            hori_plans_merged.append(_plan)
+
+    # try all possible horizontal starting location on the board to translate into shorter sequences
+    hori_plans_merged_shortened = []
+    for _plan in hori_plans_merged:
+        _plan_length = _plan["schema_length"]
+        _plan_width = _plan["schema_width"]
+        _plan_pattern = _plan["pattern"]
+        _plan_points = _plan["lines_sliced"]
+        for _hori in range(min(_plan_width, hori_margin)):  # horizontal starting location
+            _lines_success = False
+            _lines_decoded = []
+            for __line_idx, __line in enumerate(_plan_points):
+                __line_loc_board_start = _hori
+                __line_loc = np.arange(__line_loc_board_start,
+                                       __line_loc_board_start + len(__line) * hori_margin, hori_margin)
+                __line_decoded, _ = _decode_one_line(
+                    points=__line, points_loc=__line_loc,
+                    width=_plan_width, use_cnt_delta=use_cnt_delta)
+                if __line_decoded is None or _plan_length != len(__line_decoded):
+                    _lines_success = False
+                    break
+
+                # match pattern in the first line
+                if 0 == __line_idx:
+                    __match_res, __match_idx = _search_bin_array_patterns(seq=__line_decoded, pat=_plan_pattern)
+                    if __match_res is False or 0 != __match_idx:
+                        _lines_success = False
+                        break
+                _lines_success = True
+                _lines_decoded.append(__line_decoded)
+
+            # omit horizontal_starting_loc if FAILED line-decoding exists or NO category_1 is found
+            if _lines_success is False:
+                continue
+
+            # otherwise, add to the possible plans
+            hori_plans_merged_shortened.append({
+                "schema_length": _plan_length,
+                "schema_width": _plan_width,
+                "pattern_category": _plan["pattern_category"],
+                "pattern": _plan_pattern,
+                "lines_sliced": _plan_points,
+                "lines_sliced_decoded": np.array(_lines_decoded),
+            })
+
+    if 0 == len(hori_plans_merged_shortened):  # CHECKPOINT: focus on variable `hori_plans_merged_shortened`
+        raise DecodeFailureHori("No Possibilities for Encoding Shortening")
+
+    # === merge all shortened results that are the same
+    def _hori_plan_shortened_are_equal(plan_1: dict, plan_2: dict) -> bool:
+        if (plan_1["schema_length"] == plan_2["schema_length"]) is False:
+            return False
+        if (plan_1["schema_width"] == plan_2["schema_width"]) is False:
+            return False
+        if (plan_1["pattern_category"] == plan_2["pattern_category"]) is False:
+            return False
+        return all([np.array_equal(i, j) for i, j in
+                    zip(plan_1["lines_sliced_decoded"], plan_2["lines_sliced_decoded"])])
+
+    hori_plans_merged_shortened_merged = []
+    for _plan in hori_plans_merged_shortened:
+        _set_found = False
+        for __plan_set in hori_plans_merged_shortened_merged:
+            if _hori_plan_shortened_are_equal(_plan, __plan_set) is True:
+                _set_found = True
+                break
+        if _set_found is False:
+            hori_plans_merged_shortened_merged.append(_plan)
 
     # try to decode all merged plans
-    _res_decoded = []  # CHECKPOINT: focus on variable `hori_plans_sliced_merged`
+    _res_decoded = []  # CHECKPOINT: focus on variable `hori_plans_merged_shortened`
     _res_decoded_info = []  # [{"category_1"/"category_2": <str>}, ...]
-    for _final_plan in hori_plans_sliced_merged:
-        _res_category_1_idx = _final_plan["patterns_found_category"]
-        # === extract the final results of the horizontal decoding: remove all empty lines
-        _hori_res = _final_plan["lines_decoded_sliced"]
-        _hori_res = [__line for __line in _hori_res if 0 != len(__line)]
-        if 0 == len(_hori_res):
-            continue
+    res_cnt_before_validation = 0
+    res_cnt_after_validation = 0
+    for _final_plan in hori_plans_merged_shortened_merged:
+        _res_category_1_idx = _final_plan["pattern_category"]
+        _hori_res = _final_plan["lines_sliced_decoded"]
+        # if 0 == len(_hori_res):
+        #     continue
         print(end="")  # CHECKPOINT: focus on variable `_hori_res`
         # === merge lines
         try:
@@ -291,11 +393,15 @@ def decode(sign_data_obj: TrafficSignsData,
             continue
         print(end="")  # CHECKPOINT: focus on variable `_vert_res`
         # === actual decoder: handful decoded lines data to sign board info
-        _decode_res = _decode_handful_lines(lines_decoded=_vert_res, cat_1_idx=_res_category_1_idx)
+        try:
+            _decode_res = _decode_handful_lines(lines_decoded=_vert_res, cat_1_idx=_res_category_1_idx)
+        except AssertionError as err:
+            continue
         print(end="")  # CHECKPOINT: focus on variable `_decode_res`
         # === validate the decoded result (by data encoding properties)
         _decode_res_info = sign_data_obj.get_sign_info_by_idx(cat_1_idx=_decode_res["category_1"],
                                                               cat_2_idx=_decode_res["category_2"])
+        res_cnt_before_validation += 1
         if _decode_res_info is not None:
             # validate the decoded result (by max possible encoding levels)
             _fields_cnt = int(_decode_res["category_1"] is not None) + \
@@ -309,13 +415,16 @@ def decode(sign_data_obj: TrafficSignsData,
                 continue
             _res_decoded.append(_decode_res)
             _res_decoded_info.append(_decode_res_info)
+            res_cnt_after_validation += 1
 
     if 0 == len(_res_decoded):  # CHECKPOINT: focus on variable `_res_decoded`, `_res_decoded_info`
-        raise DecodeFailure("No Valid Possibilities")
+        raise DecodeFailure("No Valid Possibilities while Translating Binary to Decimal")
 
     # tolerable parsing: merge as-many-as-possible fields
     #   Note: (observed phenomenon) two identical cat_1&cat_2 might be merged tolerably,
     #       since they can be decode results with different pattern-found-location (e.g. due to different leading 1s)
+    res_cnt_before_toleration = len(_res_decoded) if len(_res_decoded) > 1 else 0
+    res_cnt_after_toleration = 1 if len(_res_decoded) > 1 else 0
     if 1 < len(_res_decoded) and tolerable is True:
         _res_decoded_tol_success = False
         _res_decoded_tol = {key: None for key in _res_decoded[0].keys()}
@@ -328,6 +437,8 @@ def decode(sign_data_obj: TrafficSignsData,
             _res_decoded_tol_success = True
             # merge category_2
             _res_dec_all_cat_2 = set([_dec_res["category_2"] for _dec_res in _res_decoded])
+            if 1 != len(_res_dec_all_cat_2):
+                print(end="")
             if 1 == len(_res_dec_all_cat_2):
                 _res_decoded_tol["category_2"] = _res_decoded[0]["category_2"]
                 _res_decoded_info_tol["category_2"] = _res_decoded_info[0]["category_2"]
@@ -348,9 +459,41 @@ def decode(sign_data_obj: TrafficSignsData,
     res_decoded = _res_decoded[0]
     res_decoded_info = _res_decoded_info[0]
 
-    return res_decoded, res_decoded_info
+    return res_decoded, res_decoded_info, \
+           {
+               "validation": {"before": res_cnt_before_validation, "after": res_cnt_after_validation},
+               "toleration": {"before": res_cnt_before_toleration, "after": res_cnt_after_toleration},
+           }
 
 
 if "__main__" == __name__:
-    pass
+    a = np.array([[np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
+                   np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, 1, np.nan, np.nan, np.nan, np.nan, np.nan,
+                   np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
+                   np.nan, np.nan],
+                  [np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
+                   np.nan, np.nan, np.nan, np.nan, np.nan, 1, 1, 1, 1, 1, np.nan, np.nan, np.nan, np.nan, np.nan,
+                   np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan],
+                  [np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
+                   np.nan, np.nan, np.nan, 1, 1, 1, 1, 1, 1, 1, 1, 1, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
+                   np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan],
+                  [np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
+                   np.nan, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
+                   np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan],
+                  [np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, 1, 0, 0, 0,
+                   0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
+                   np.nan, np.nan, np.nan, np.nan],
+                  [np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1,
+                   1, 1, 1, 1, 0, 0, 0, 0, 1, 1, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan,
+                   np.nan],
+                  [np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1,
+                   1, 0, 0, 0, 0, 1, 1, 1, 1, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan],
+                  [np.nan, np.nan, np.nan, np.nan, np.nan, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0,
+                   0, 0, 1, 1, 1, 1, 1, 1, np.nan, np.nan, np.nan, np.nan, np.nan, np.nan],
+                  [np.nan, np.nan, np.nan, np.nan, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                   1, 1, 1, 1, 1, 1, 1, 1, np.nan, np.nan, np.nan, np.nan],
+                  [np.nan, np.nan, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1,
+                   1, 1, 1, 1, 1, 1, 1, np.nan, np.nan]])
+    b = decode(TrafficSignsData(), a, hori_margin=35, vert_margin=116, height=221, width=67, use_cnt_delta=True,
+               tolerable=True)
     print()
