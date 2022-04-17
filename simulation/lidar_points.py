@@ -41,10 +41,13 @@ class LiDARSampling:
 
         return res
 
-    def sample_at_distance(self, dist: int) -> (List[np.ndarray], List[Dict[str, int]]):
+    def sample_at_distance(self, dist: int, vert_step: int = 1, hori_step: int = 1) \
+            -> (List[np.ndarray], List[Dict[str, int]]):
         """
         Sample the whole canvas at the given distance
         :param dist:                given distance (in METER's)
+        :param vert_step:           step size of vertical sampling
+        :param hori_step:           step size of horizontal sampling
         :return:                    (1) <list>of<np.ndarray>,
                                         containing (height//vert_margin)*(width//hori_margin) elements,
                                         each as a binary representation of the sampled points:
@@ -61,8 +64,8 @@ class LiDARSampling:
         res = []
         res_loc = []
         res_shape_min, res_shape_max = (self.canvas_obj.height, self.canvas_obj.width), (0, 0)
-        for _height_start in range(0, vert_margin):  # vertically, each idx=1mm
-            for _width_start in range(0, hori_margin):  # horizontally, each idx=1mm
+        for _height_start in range(0, vert_margin, vert_step):  # vertically, each idx=1mm
+            for _width_start in range(0, hori_margin, hori_step):  # horizontally, each idx=1mm
                 # do sampling
                 __pts = self.canvas_obj.canvas[_height_start::vert_margin, _width_start::hori_margin, :]
                 # print(vert_margin, hori_margin, __pts.shape)
