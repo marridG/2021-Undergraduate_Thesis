@@ -10,11 +10,53 @@ ENCODING_PATTERN_LENGTH = 4
 
 # sub patterns for 1st category
 _ALL_BIN_PATTERNS = [
-    np.array([0, 0, 1, 1], dtype=int),
+    np.array([0, 0, 1, 1], dtype=int),  # np.array([0, 0, 1, 1], dtype=int),
     np.array([0, 1, 1, 0], dtype=int),
     np.array([0, 0, 0, 0], dtype=int),
 ]
 # indices to be avoided so as not to emerge the same sub-sequence (for 1st category) used on the boards
+# _all_avoid_bin_dec_set = set()  # seq = board_dup + category_1_seq
+# avoid = [
+#     (np.array([0, 0, 0, 0, 1, 1, 1, 1], dtype=int),
+#      [[0, i1, 1, i3, 1, i5, 0, i7]
+#       for i1 in range(2) for i3 in range(2) for i5 in range(2) for i7 in range(2)] + \
+#      [[i0, 0, i2, 1, i4, 1, i6, 0]
+#       for i0 in range(2) for i2 in range(2) for i4 in range(2) for i6 in range(2)] + \
+#      [[0, i1, 0, i3, 0, i5, 0, i7]
+#       for i1 in range(2) for i3 in range(2) for i5 in range(2) for i7 in range(2)] + \
+#      [[i0, 0, i2, 0, i4, 0, i6, 0]
+#       for i0 in range(2) for i2 in range(2) for i4 in range(2) for i6 in range(2)]),
+#     (np.array([0, 0, 1, 1, 1, 1, 0, 0], dtype=int),
+#      [[0, i1, 0, i3, 1, i5, 1, i7]
+#       for i1 in range(2) for i3 in range(2) for i5 in range(2) for i7 in range(2)] + \
+#      [[i0, 0, i2, 0, i4, 1, i6, 1]
+#       for i0 in range(2) for i2 in range(2) for i4 in range(2) for i6 in range(2)] + \
+#      [[0, i1, 0, i3, 0, i5, 0, i7]
+#       for i1 in range(2) for i3 in range(2) for i5 in range(2) for i7 in range(2)] + \
+#      [[i0, 0, i2, 0, i4, 0, i6, 0]
+#       for i0 in range(2) for i2 in range(2) for i4 in range(2) for i6 in range(2)]),
+#     (np.array([0, 0, 0, 0, 0, 0, 0, 0], dtype=int),
+#      [[0, i1, 0, i3, 1, i5, 1, i7]
+#       for i1 in range(2) for i3 in range(2) for i5 in range(2) for i7 in range(2)] + \
+#      [[i0, 0, i2, 0, i4, 1, i6, 1]
+#       for i0 in range(2) for i2 in range(2) for i4 in range(2) for i6 in range(2)] + \
+#      [[0, i1, 1, i3, 1, i5, 0, i7]
+#       for i1 in range(2) for i3 in range(2) for i5 in range(2) for i7 in range(2)] + \
+#      [[i0, 0, i2, 1, i4, 1, i6, 0]
+#       for i0 in range(2) for i2 in range(2) for i4 in range(2) for i6 in range(2)])
+# ]
+# set_2 = set([])
+# for _c1, _c2s in avoid:
+#     for _c2 in _c2s:
+#         _c2 = np.array(_c2)
+#         set_2.add(utils.num_bin_2_dec(num=_c2))
+#         _c2_real = _c1 ^ _c2
+#         __cat_2_dec = utils.num_bin_2_dec(num=_c2_real)
+#         _all_avoid_bin_dec_set.add(__cat_2_dec)
+# print(len(_all_avoid_bin_dec_set))
+# print(len(set_2))
+# print()
+# exit()
 _all_avoid_bin_dec_set = set()  # seq = board_dup + category_1_seq
 _all_cat_2_bin = [[0, i1, 0, i3, 0, i5, 0, i7]
                   for i1 in range(2) for i3 in range(2) for i5 in range(2) for i7 in range(2)] + \
