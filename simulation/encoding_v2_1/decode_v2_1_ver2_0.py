@@ -152,6 +152,7 @@ def decode(sign_data_obj: TrafficSignsData,
            points: np.ndarray,
            hori_margin: int, vert_margin: int,
            height: int, width: int,
+           is_scaled_height: bool,
            use_cnt_delta: bool,
            tolerable: Optional[bool] = False, ) \
         -> Tuple[Dict[str, int], Dict[str, str], Dict[str, Dict[str, int]]]:
@@ -163,7 +164,8 @@ def decode(sign_data_obj: TrafficSignsData,
     if max_cnt_encoding_hori_pt < pattern_v2_1.ENCODING_PATTERN_LENGTH:
         raise DecodeFailureHori("Insufficient Data: Required >= %d on Encodings, Got <=%d"
                                 % (pattern_v2_1.ENCODING_PATTERN_LENGTH, max_cnt_encoding_hori_pt))
-    max_cnt_encoding_vert_pt = np.floor(height * 1. * pattern_v2_1.ENCODING_LEVELS / vert_margin).astype(int) + 1
+    encoding_real_levels = pattern_v2_1.ENCODING_LEVELS if is_scaled_height is False else pattern_v2_1.ENCODING_LEVELS + 1
+    max_cnt_encoding_vert_pt = np.floor(height * 1. * encoding_real_levels / vert_margin).astype(int) + 1
     if max_cnt_encoding_vert_pt < 1:
         raise DecodeFailureVert("Insufficient Data: Required >= 1 on Encodings, Got <1")
 
@@ -251,7 +253,11 @@ def decode(sign_data_obj: TrafficSignsData,
                 __line_sliced = __line[_lines_pat_found["loc"][0]:_lines_pat_found["loc"][1]]
                 if len(__line_sliced) < _sliced_len:
                     continue
+                # remove lines that have NANs
                 if 0 != len(np.where(True == np.isnan(__line_sliced))[0]):
+                    continue
+                # remove lines that are all ones
+                if 0 != int(np.min(__line_sliced)):
                     continue
                 _pt_sliced.append(__line_sliced)
             _pt_sliced = np.array(_pt_sliced)
