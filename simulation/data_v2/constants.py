@@ -14,7 +14,7 @@ _ALL_NUMS_BY_CATEGORY = {
         2, 5, 7, 10, 13, 15, 20, 30, 40, 50, 55, 60,  # weight limits (web) = 12
     ],
 }
-ALL_SIGNS_BY_CATEGORY = {  # cnt = 200 (67+104+29)
+ALL_SIGNS_BY_CATEGORY = {  # cnt = 198 (67+102+29)
     "warning": [  # cnt = 67 (67+0)
         "w1", "w2", "w3", "w4", "w5", "w6", "w7", "w8", "w9", "w10",
         "w11", "w12", "w13", "w14", "w15", "w16", "w17", "w18", "w19", "w20",
