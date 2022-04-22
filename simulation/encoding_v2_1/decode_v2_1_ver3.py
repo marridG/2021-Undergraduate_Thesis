@@ -7,48 +7,177 @@ from simulation.exceptions import *
 from encoding_v2_1 import pattern_v2_1, substring_match_BM
 
 
-def _decode_one_line(points: np.ndarray, points_loc: np.ndarray, width: int, use_cnt_delta: bool) \
+def cal(points, max_cnt_per_bar=2):
+    ALLOW_END_1 = False
+    points = points.astype(int)
+    pts_l_neq_r = np.concatenate(([True], points[:-1] != points[1:], [True]))
+    pts_l_neq_r_start_idx = np.where(True == pts_l_neq_r)[0]
+    pts_l_neq_r_start_idx_is_one_idx = np.where(1 == points[pts_l_neq_r_start_idx[:-1]])
+    pts_conti_cnt = np.diff(pts_l_neq_r_start_idx)
+    pts_conti_cnt[pts_l_neq_r_start_idx_is_one_idx] *= -1
+    # now, in variable `pts_conti_cnt`, each element is the number of continuous 1/0's (cnt_1<0, cnt_0>0)
+    if pts_conti_cnt[0] < 0:
+        pts_conti_cnt = pts_conti_cnt[1:]
+
+    _empty_val = -99
+    all_possibilities = []  # [{"seq"/"pt_cnt": []}, ...]
+    seq = [_empty_val] * 8
+    seq_pt_cnt = [_empty_val] * 8
+
+    def back_trace(_seq_ptr, _conti_ptr):
+        if 8 == _seq_ptr:
+            # === assuming the last digit of the pattern can NOT be 1 ===
+            if ALLOW_END_1 is False:
+                # last digit is 1
+                if 1 == seq[-1]:
+                    return False
+                # unused zeros at _conti_ptr+2
+                if _conti_ptr <= (len(pts_conti_cnt) - 1) - 2:
+                    return False
+                # unused zeros at _conti_ptr
+                if 0 < pts_conti_cnt[_conti_ptr]:
+                    return False
+            # === assuming the last digit of the pattern CAN be 1 ===
+            else:  # i.e., ALLOW_END_1 is True:
+                if 0 == seq[-1]:
+                    # unused zeros at _conti_ptr+2
+                    if _conti_ptr <= (len(pts_conti_cnt) - 1) - 2:
+                        return False
+                    # unused zeros at _conti_ptr
+                    if 0 < pts_conti_cnt[_conti_ptr]:
+                        return False
+                else:
+                    # unused ones/zeros at _conti_ptr+1
+                    if _conti_ptr <= (len(pts_conti_cnt) - 1) - 1:
+                        return False
+            # return True
+            all_possibilities.append({"seq": seq.copy(), "pt_cnt": seq_pt_cnt.copy()})
+            return False
+
+        for __pt_cnt in range(max_cnt_per_bar - 1, max_cnt_per_bar + 1):
+            if __pt_cnt > abs(pts_conti_cnt[_conti_ptr]):
+                continue
+            if _seq_ptr > 0 and abs(__pt_cnt - seq_pt_cnt[_seq_ptr - 1]) > 1:
+                continue
+            __pt_is_one = (pts_conti_cnt[_conti_ptr] < 0)
+            __pt_val = 1 if __pt_is_one else 0
+
+            seq[_seq_ptr] = __pt_val
+            seq_pt_cnt[_seq_ptr] = __pt_cnt
+            _seq_ptr += 1
+            pts_conti_cnt[_conti_ptr] += __pt_cnt * (1 if __pt_is_one else -1)
+            _conti_ptr_moved = (0 == pts_conti_cnt[_conti_ptr])
+            _conti_ptr += 1 if _conti_ptr_moved else 0
+
+            _next_res = back_trace(_seq_ptr=_seq_ptr, _conti_ptr=_conti_ptr)  # CHECKPOINT
+            if _next_res is True:
+                return True
+            # restore status
+            _conti_ptr -= 1 if _conti_ptr_moved else 0
+            pts_conti_cnt[_conti_ptr] -= __pt_cnt * (1 if __pt_is_one else -1)
+            _seq_ptr -= 1
+            seq_pt_cnt[_seq_ptr] = _empty_val
+            seq[_seq_ptr] = _empty_val
+            continue  # CHECKPOINT
+        return False
+
+    bt_res = back_trace(_seq_ptr=0, _conti_ptr=0)
+    print(bt_res)
+    print(all_possibilities)
+
+    return
+
+
+def _decode_one_line(points: np.ndarray, max_cnt_per_bar: int, allow_end_1: bool = False) \
         -> (None, None) or (np.ndarray, np.ndarray):
     """
     doc todo: General decoder to "combine" DETECTED horizontal digits into the fixed length of encodings
     :param points:          samples of binary values (0/1)
-    :param points_loc:      location of the samples of binary values (in milli-meters)
-    :param width:           width of each digit in the horizontal sequence (in milli-meters)
-    :param use_cnt_delta:   whether to use the delta info of the numbers of points in adjacent bars
-    :return:                "combined" sequence of bars, given as type <int>
+    :param max_cnt_per_bar: maximum number of sample points per bar
+    :param allow_end_1:     allow the last digit of the encodings to be 1
+    :return:                "combined" sequence of bars and corresponding merge plans
     """
     assert 1 == len(points.shape)
     assert len(points) > 0
-    assert points.shape == points_loc.shape
     assert False == np.isnan(np.max(points))  # make sure no nan values
 
-    # map points to bars, by their locations
-    pt_bar_idx = points_loc / (1.0 * width)
-    pt_bar_idx = np.floor(pt_bar_idx).astype(int)
-    pt_bar_idx -= np.min(pt_bar_idx)
-    pt_bar_cnt = np.max(pt_bar_idx) - np.min(pt_bar_idx) + 1
-    assert 0 != pt_bar_cnt
+    points = points.astype(int)
+    pts_l_neq_r = np.concatenate(([True], points[:-1] != points[1:], [True]))
+    pts_l_neq_r_start_idx = np.where(True == pts_l_neq_r)[0]
+    pts_l_neq_r_start_idx_is_one_idx = np.where(1 == points[pts_l_neq_r_start_idx[:-1]])
+    pts_conti_cnt = np.diff(pts_l_neq_r_start_idx)
+    pts_conti_cnt[pts_l_neq_r_start_idx_is_one_idx] *= -1
+    # now, in variable `pts_conti_cnt`, each element is the number of continuous 1/0's (cnt_1<0, cnt_0>0)
+    if pts_conti_cnt[0] < 0:
+        pts_conti_cnt = pts_conti_cnt[1:]
 
-    # merge values of the same bar
-    _pt_bar_val_accum = np.zeros(pt_bar_cnt, dtype=int)  # accumulate values
-    _pt_bar_pt_cnt = np.zeros(pt_bar_cnt, dtype=int)  # as counter
-    for _val, _idx in zip(points, pt_bar_idx):
-        _pt_bar_val_accum[_idx] += _val
-        _pt_bar_pt_cnt[_idx] += 1
+    _empty_val = -99
+    all_possibilities = []  # [{"seq"/"pt_cnt": []}, ...]
+    seq = [_empty_val] * 8
+    seq_pt_cnt = [_empty_val] * 8
 
-    # judge cnt delta if used
-    if use_cnt_delta:
-        _delta = _pt_bar_pt_cnt[1:] - _pt_bar_pt_cnt[:-1]  # delta = right - left]
-        if 0 != _delta.size:
-            if np.abs(np.max(_delta)) > 1 or np.abs(np.min(_delta)) > 1:
-                return None, None
+    def back_trace(_seq_ptr, _conti_ptr):
+        if 8 == _seq_ptr:
+            # === assuming the last digit of the pattern can NOT be 1 ===
+            if allow_end_1 is False:
+                # last digit is 1
+                if 1 == seq[-1]:
+                    return False
+                # unused zeros at _conti_ptr+2
+                if _conti_ptr <= (len(pts_conti_cnt) - 1) - 2:
+                    return False
+                # unused zeros at _conti_ptr
+                if 0 < pts_conti_cnt[_conti_ptr]:
+                    return False
+            # === assuming the last digit of the pattern CAN be 1 ===
+            else:  # i.e., ALLOW_END_1 is True:
+                if 0 == seq[-1]:
+                    # unused zeros at _conti_ptr+2
+                    if _conti_ptr <= (len(pts_conti_cnt) - 1) - 2:
+                        return False
+                    # unused zeros at _conti_ptr
+                    if 0 < pts_conti_cnt[_conti_ptr]:
+                        return False
+                else:
+                    # unused ones/zeros at _conti_ptr+1
+                    if _conti_ptr <= (len(pts_conti_cnt) - 1) - 1:
+                        return False
+            # return True
+            all_possibilities.append({"seq": seq.copy(), "pt_cnt": seq_pt_cnt.copy()})
+            return False
 
-    _pt_bar_pt_cnt[np.where(0 == _pt_bar_pt_cnt)] = -99  # to avoid divide-by-zero problem
-    res = _pt_bar_val_accum * 1.0 / _pt_bar_pt_cnt
-    res[np.where(0.5 == res)] = 1  # added on 04/16
-    res = np.round(res).astype(int)
+        for __pt_cnt in range(max_cnt_per_bar - 1, max_cnt_per_bar + 1):
+            if __pt_cnt > abs(pts_conti_cnt[_conti_ptr]):
+                continue
+            if _seq_ptr > 0 and abs(__pt_cnt - seq_pt_cnt[_seq_ptr - 1]) > 1:
+                continue
+            __pt_is_one = (pts_conti_cnt[_conti_ptr] < 0)
+            __pt_val = 1 if __pt_is_one else 0
 
-    return res, pt_bar_idx
+            seq[_seq_ptr] = __pt_val
+            seq_pt_cnt[_seq_ptr] = __pt_cnt
+            _seq_ptr += 1
+            pts_conti_cnt[_conti_ptr] += __pt_cnt * (1 if __pt_is_one else -1)
+            _conti_ptr_moved = (0 == pts_conti_cnt[_conti_ptr])
+            _conti_ptr += 1 if _conti_ptr_moved else 0
+
+            _next_res = back_trace(_seq_ptr=_seq_ptr, _conti_ptr=_conti_ptr)  # CHECKPOINT
+            if _next_res is True:
+                return True
+            # restore status
+            _conti_ptr -= 1 if _conti_ptr_moved else 0
+            pts_conti_cnt[_conti_ptr] -= __pt_cnt * (1 if __pt_is_one else -1)
+            _seq_ptr -= 1
+            seq_pt_cnt[_seq_ptr] = _empty_val
+            seq[_seq_ptr] = _empty_val
+            continue  # CHECKPOINT
+        return False
+
+    bt_res = back_trace(_seq_ptr=0, _conti_ptr=0)  # is always False
+    # print(bt_res)
+    # print(all_possibilities)
+
+    return all_possibilities
 
 
 def _search_bin_array_patterns(seq: np.ndarray, pat: np.ndarray) -> (bool, int):
@@ -152,6 +281,7 @@ def decode(sign_data_obj: TrafficSignsData,
            points: np.ndarray,
            hori_margin: int, vert_margin: int,
            height: int, width: int,
+           is_scaled_height: bool,
            use_cnt_delta: bool,
            tolerable: Optional[bool] = False, ) \
         -> Tuple[Dict[str, int], Dict[str, str], Dict[str, Dict[str, int]]]:
@@ -163,7 +293,8 @@ def decode(sign_data_obj: TrafficSignsData,
     if max_cnt_encoding_hori_pt < pattern_v2_1.ENCODING_PATTERN_LENGTH:
         raise DecodeFailureHori("Insufficient Data: Required >= %d on Encodings, Got <=%d"
                                 % (pattern_v2_1.ENCODING_PATTERN_LENGTH, max_cnt_encoding_hori_pt))
-    max_cnt_encoding_vert_pt = np.floor(height * 1. * pattern_v2_1.ENCODING_LEVELS / vert_margin).astype(int) + 1
+    encoding_real_levels = pattern_v2_1.ENCODING_LEVELS if is_scaled_height is False else pattern_v2_1.ENCODING_LEVELS + 1
+    max_cnt_encoding_vert_pt = np.floor(height * 1. * encoding_real_levels / vert_margin).astype(int) + 1
     if max_cnt_encoding_vert_pt < 1:
         raise DecodeFailureVert("Insufficient Data: Required >= 1 on Encodings, Got <1")
 
@@ -184,109 +315,96 @@ def decode(sign_data_obj: TrafficSignsData,
                            "width": width, "patterns": all_bin_patterns_full}]
 
     # === extract the code part only, by the horizontal starting location of the whole canvas
-    hori_plans = []  # CHECKPOINT: focus on variable `decode_schemas`
+    points_sliced = None
+    _slice_suc = False
+    _slice_line_start, _slice_line_end = -1, -1
+    _slice_col_start, _slice_col_end = -1, -1
+    for _line_idx, _line in enumerate(points):
+        try:
+            _line_min_val_idx = np.nanargmin(_line)
+        except ValueError:  # if the line is full of nans
+            continue
+        if _line[_line_min_val_idx].astype(int) > 0:
+            continue
+        _slice_line_start = _line_idx
+        _slice_line_end = _slice_line_start + max_cnt_encoding_vert_pt
+        _slice_col_start = _line_min_val_idx  # including
+        _slice_col_end = _slice_col_start + max_cnt_encoding_hori_pt  # excluding
+        _slice_suc = True
+        break
+    if _slice_suc is False:
+        raise DecodeFailureHori("All Lines are NaN or 1")
+    points_sliced = points[_slice_line_start:_slice_line_end, _slice_col_start: _slice_col_end]
+
+    # remove lines that have NANs
+    _slice_line_end = points_sliced.shape[0] - 1
+    for _line_idx in range(_slice_line_end, 0 - 1, -1):
+        if 0 == len(np.where(True == np.isnan(points_sliced[_line_idx, :]))[0]):
+            break
+        _slice_line_end -= 1
+    points_sliced = points_sliced[:_slice_line_end + 1, :]
+
+    # further remove ending columns that are all ones or have NANs
+    _slice_col_end = points_sliced.shape[1] - 1
+    for _col_idx in range(_slice_col_end, 0 - 1, -1):  # from end
+        _col_not_all_ones = (0 == (points_sliced[:, _col_idx][np.nanargmin(points_sliced[:, _col_idx])].astype(int)))
+        _col_no_nan = (0 == len(np.where(True == np.isnan(points_sliced[:, _col_idx]))[0]))
+        if _col_not_all_ones and _col_no_nan:
+            break
+        _slice_col_end -= 1
+    points_sliced = points_sliced[:, :_slice_col_end + 1]
+
+    hori_plans = []  # CHECKPOINT: focus on variable `points_sliced`
     for schema in decode_schemas:
         schema_length = schema["length"]
         schema_width = schema["width"]
         schema_all_patterns = schema["patterns"]
-        for _hori in range(max(schema_width, hori_margin)):  # horizontal starting location
-            _lines_success = False
-            _lines_pat_found = {}  # {"cat": -1, "line": -1, "loc": [-1, -1]}
-            for __line_idx, __line in enumerate(points):
-                __line_not_nan_idx = np.where(False == np.isnan(__line))
-                if 0 == len(__line_not_nan_idx[0]) or schema_length > len(__line_not_nan_idx[0]):
-                    continue
-                __line_nan_cnt_head = __line_not_nan_idx[0][0] - 0
-                __line_data = __line[__line_not_nan_idx]  # remove nan-s (Note: np.nan != np.nan)
+        # for _hori in range(max(schema_width, hori_margin)):  # horizontal starting location
+        for _hori in range(min(schema_width, hori_margin)):  # horizontal starting location
+            _lines_success = True
+            _lines_pattern_found, _lines_pattern_idx = False, -1
+            _lines_decoded = []
+            for __line in points_sliced:
                 __line_loc_board_start = _hori
                 __line_loc = np.arange(__line_loc_board_start,
-                                       __line_loc_board_start + len(__line_data) * hori_margin, hori_margin)
-                __line_decoded, __line_pts_bar_idx = _decode_one_line(
-                    points=__line_data, points_loc=__line_loc,
+                                       __line_loc_board_start + len(__line) * hori_margin, hori_margin)
+                __line_decoded, _ = _decode_one_line(
+                    points=__line, points_loc=__line_loc,
                     width=schema_width, use_cnt_delta=use_cnt_delta)
-                if __line_decoded is None:
-                    continue
-
-                # search for possibly existing category_1 patterns
-                for ___pattern_idx, ___pattern in enumerate(schema_all_patterns):  # each as <np.ndarray)>
-                    ___match_res, ___match_idx = _search_bin_array_patterns(seq=__line_decoded, pat=___pattern)
-                    print(end="")
-                    if ___match_res is True:
-                        ___loc_bar_start = ___match_idx  # including
-                        ___loc_bar_end = ___loc_bar_start + schema_length - 1  # including
-                        # including
-                        ___loc_pt_start = np.where(__line_pts_bar_idx == ___loc_bar_start)[0]
-                        if 0 == len(___loc_pt_start):
-                            ___loc_pt_start = np.where(__line_pts_bar_idx > ___loc_bar_start)[0][0]
-                        else:
-                            ___loc_pt_start = ___loc_pt_start[0]
-                        # excluding
-                        ___loc_pt_end = np.where(__line_pts_bar_idx == ___loc_bar_end)[0]
-                        if 0 == len(___loc_pt_end):
-                            ___loc_bar_end_larger = \
-                                __line_pts_bar_idx[np.where(__line_pts_bar_idx > ___loc_bar_end)][0]
-                            ___loc_pt_end = np.where(__line_pts_bar_idx == ___loc_bar_end_larger)[0][-1]
-                        else:
-                            ___loc_pt_end = ___loc_pt_end[-1] + 1
-                        ___loc_pt_start += __line_nan_cnt_head
-                        ___loc_pt_end += __line_nan_cnt_head
-                        _lines_pat_found = {"cat": ___pattern_idx, "line": __line_idx,
-                                            "loc": [___loc_pt_start, ___loc_pt_end]}
-                        _lines_success = True
-                        break
-
-                if _lines_success is True:
+                if __line_decoded is None or schema_length != len(__line_decoded):
+                    _lines_success = False
                     break
+
+                # match pattern if is not detected yet
+                if _lines_pattern_found is False:
+                    for __pattern_idx, __pattern in enumerate(schema_all_patterns):
+                        __match_res, __match_idx = _search_bin_array_patterns(seq=__line_decoded, pat=__pattern)
+                        if __match_res is True and 0 == __match_idx:
+                            _lines_pattern_found = True
+                            _lines_pattern_idx = __pattern_idx
+                            break
+                # omit lines above the line containing the pattern
+                if _lines_pattern_found is False:
+                    continue
+                _lines_decoded.append(__line_decoded)
 
             # omit horizontal_starting_loc if FAILED line-decoding exists or NO category_1 is found
-            if _lines_success is False:
+            if _lines_success is False or _lines_pattern_found is False:
                 continue
 
-            # otherwise, slice the original points and add to the possible plans
-            _pt_sliced = []
-            _sliced_len = _lines_pat_found["loc"][1] - _lines_pat_found["loc"][0]
-            for __line_idx, __line in enumerate(points):
-                if __line_idx < _lines_pat_found["line"]:
-                    continue
-                __line_sliced = __line[_lines_pat_found["loc"][0]:_lines_pat_found["loc"][1]]
-                if len(__line_sliced) < _sliced_len:
-                    continue
-                if 0 != len(np.where(True == np.isnan(__line_sliced))[0]):
-                    continue
-                _pt_sliced.append(__line_sliced)
-            _pt_sliced = np.array(_pt_sliced)
-            # further remove starting and ending columns that are all ones
-            _start_end_all_one_col_idx = set()
-            for __col_idx in range(_pt_sliced.shape[1]):  # from start
-                if np.sum(_pt_sliced[:, __col_idx]) == _pt_sliced.shape[0]:
-                    _start_end_all_one_col_idx.add(__col_idx)
-                else:
-                    break
-            for __col_idx in range(_pt_sliced.shape[1] - 1, 0 - 1, -1):  # from end
-                if np.sum(_pt_sliced[:, __col_idx]) == _pt_sliced.shape[0]:
-                    _start_end_all_one_col_idx.add(__col_idx)
-                else:
-                    break
-            _all_not_all_one_col_idx = []
-            for __col_idx in range(_pt_sliced.shape[1]):
-                if __col_idx not in _start_end_all_one_col_idx:
-                    _all_not_all_one_col_idx.append(__col_idx)
-            _pt_sliced_no_all_one_col = _pt_sliced[:, _all_not_all_one_col_idx]
-            if 0 == _pt_sliced_no_all_one_col.size:
-                continue
-
+            # otherwise, add to the possible plans
             hori_plans.append({
                 "schema_length": schema_length,
                 "schema_width": schema_width,
-                "pattern_category": _lines_pat_found["cat"],
-                "pattern": schema_all_patterns[_lines_pat_found["cat"]],
-                "lines_sliced": _pt_sliced_no_all_one_col,
+                "pattern_category": _lines_pattern_idx,
+                "pattern": schema_all_patterns[_lines_pattern_idx],
+                "lines_decoded": np.array(_lines_decoded),
             })
 
     if 0 == len(hori_plans):  # CHECKPOINT: focus on variable `hori_plans`
-        raise DecodeFailureHori("No Possibilities for Encoding Part Extraction")
+        raise DecodeFailureHori("No Possibilities for Iterating Hori Starting Locs")
 
-    # === merge all sliced results that are the same
+    # === merge all shortened results that are the same
     def _hori_plan_are_equal(plan_1: dict, plan_2: dict) -> bool:
         if (plan_1["schema_length"] == plan_2["schema_length"]) is False:
             return False
@@ -295,7 +413,7 @@ def decode(sign_data_obj: TrafficSignsData,
         if (plan_1["pattern_category"] == plan_2["pattern_category"]) is False:
             return False
         return all([np.array_equal(i, j) for i, j in
-                    zip(plan_1["lines_sliced"], plan_2["lines_sliced"])])
+                    zip(plan_1["lines_decoded"], plan_2["lines_decoded"])])
 
     hori_plans_merged = []
     for _plan in hori_plans:
@@ -307,82 +425,14 @@ def decode(sign_data_obj: TrafficSignsData,
         if _set_found is False:
             hori_plans_merged.append(_plan)
 
-    # try all possible horizontal starting location on the board to translate into shorter sequences
-    hori_plans_merged_shortened = []
-    for _plan in hori_plans_merged:
-        _plan_length = _plan["schema_length"]
-        _plan_width = _plan["schema_width"]
-        _plan_pattern = _plan["pattern"]
-        _plan_points = _plan["lines_sliced"]
-        for _hori in range(min(_plan_width, hori_margin)):  # horizontal starting location
-            _lines_success = False
-            _lines_decoded = []
-            for __line_idx, __line in enumerate(_plan_points):
-                __line_loc_board_start = _hori
-                __line_loc = np.arange(__line_loc_board_start,
-                                       __line_loc_board_start + len(__line) * hori_margin, hori_margin)
-                __line_decoded, _ = _decode_one_line(
-                    points=__line, points_loc=__line_loc,
-                    width=_plan_width, use_cnt_delta=use_cnt_delta)
-                if __line_decoded is None or _plan_length != len(__line_decoded):
-                    _lines_success = False
-                    break
-
-                # match pattern in the first line
-                if 0 == __line_idx:
-                    __match_res, __match_idx = _search_bin_array_patterns(seq=__line_decoded, pat=_plan_pattern)
-                    if __match_res is False or 0 != __match_idx:
-                        _lines_success = False
-                        break
-                _lines_success = True
-                _lines_decoded.append(__line_decoded)
-
-            # omit horizontal_starting_loc if FAILED line-decoding exists or NO category_1 is found
-            if _lines_success is False:
-                continue
-
-            # otherwise, add to the possible plans
-            hori_plans_merged_shortened.append({
-                "schema_length": _plan_length,
-                "schema_width": _plan_width,
-                "pattern_category": _plan["pattern_category"],
-                "pattern": _plan_pattern,
-                "lines_sliced": _plan_points,
-                "lines_sliced_decoded": np.array(_lines_decoded),
-            })
-
-    if 0 == len(hori_plans_merged_shortened):  # CHECKPOINT: focus on variable `hori_plans_merged_shortened`
-        raise DecodeFailureHori("No Possibilities for Encoding Shortening")
-
-    # === merge all shortened results that are the same
-    def _hori_plan_shortened_are_equal(plan_1: dict, plan_2: dict) -> bool:
-        if (plan_1["schema_length"] == plan_2["schema_length"]) is False:
-            return False
-        if (plan_1["schema_width"] == plan_2["schema_width"]) is False:
-            return False
-        if (plan_1["pattern_category"] == plan_2["pattern_category"]) is False:
-            return False
-        return all([np.array_equal(i, j) for i, j in
-                    zip(plan_1["lines_sliced_decoded"], plan_2["lines_sliced_decoded"])])
-
-    hori_plans_merged_shortened_merged = []
-    for _plan in hori_plans_merged_shortened:
-        _set_found = False
-        for __plan_set in hori_plans_merged_shortened_merged:
-            if _hori_plan_shortened_are_equal(_plan, __plan_set) is True:
-                _set_found = True
-                break
-        if _set_found is False:
-            hori_plans_merged_shortened_merged.append(_plan)
-
     # try to decode all merged plans
     _res_decoded = []  # CHECKPOINT: focus on variable `hori_plans_merged_shortened`
     _res_decoded_info = []  # [{"category_1"/"category_2": <str>}, ...]
     res_cnt_before_validation = 0
     res_cnt_after_validation = 0
-    for _final_plan in hori_plans_merged_shortened_merged:
+    for _final_plan in hori_plans_merged:
         _res_category_1_idx = _final_plan["pattern_category"]
-        _hori_res = _final_plan["lines_sliced_decoded"]
+        _hori_res = _final_plan["lines_decoded"]
         # if 0 == len(_hori_res):
         #     continue
         print(end="")  # CHECKPOINT: focus on variable `_hori_res`
