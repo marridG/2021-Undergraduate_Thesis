@@ -3,6 +3,7 @@
 ### Example user template
 
 *.png
+*.txt
 
 # IntelliJ project files
 .idea
