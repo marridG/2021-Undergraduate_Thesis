@@ -88,7 +88,7 @@ ALL_ENV_SETTINGS = {
 }
 ALL_DECODING_SETTINGS = {
     "1": {"use_cnt_delta": True, },
-    "0": {"use_cnt_delta": False, },
+    # "0": {"use_cnt_delta": False, },
 }
 
 
@@ -215,7 +215,7 @@ def do(setting_env_key, setting_dec_key):
 
     print()
     excel_str = []
-    for dist in range(10, 140 + 10, 10):  # [40]:  # range(10, 140 + 10, 10):
+    for dist in range(10, 140 + 10, 10):  # [10, 40]:  # range(10, 140 + 10, 10):
         if 10 == dist:
             v_step = 1
         elif 20 == dist:
@@ -230,7 +230,7 @@ def do(setting_env_key, setting_dec_key):
         _excel_str = sample_n_decode(distance=dist, vert_step=v_step, hori_step=h_step)
         excel_str.append(_excel_str)
 
-    print(setting_env_key, setting_dec_key + "1")
+    print(setting_env_key, setting_dec_key)
     for i in excel_str:
         print(i)
 
@@ -240,25 +240,17 @@ def do(setting_env_key, setting_dec_key):
 #     for dec_key in ALL_DECODING_SETTINGS.keys():
 #         res.append((env_key, dec_key))
 # print(res)
-# all_comb = [("tri11", "1"), ("tri11", "0"), ("tri10", "1"), ("tri10", "0"), ("tri01", "1"), ("tri01", "0"),
-#             ("tri00", "1"), ("tri00", "0"),
-#             ("cir11", "1"), ("cir11", "0"), ("cir10", "1"), ("cir10", "0"), ("cir01", "1"), ("cir01", "0"),
-#             ("cir00", "1"), ("cir00", "0"),
-#             ("rect11", "1"), ("rect11", "0"), ("rect10", "1"), ("rect10", "0"), ("rect01", "1"), ("rect01", "0"),
-#             ("rect00", "1"), ("rect00", "0")]
+# all_comb = [("tri11", "1"), ("tri10", "1"), ("tri01", "1"), ("tri00", "1"),
+#             ("cir11", "1"), ("cir10", "1"), ("cir01", "1"), ("cir00", "1"),
+#             ("rect11", "1"), ("rect10", "1"), ("rect01", "1"), ("rect00", "1")]
 all_comb = [
-    ("tri11", "1"), ("cir11", "1"), ("rect11", "1"), ("rect01", "0"),  # fast test settings
+    ("tri11", "1"), ("cir11", "1"), ("rect11", "1"),  # fast test settings
     # ("tri11", "1"),  # in fast test settings
-    ("tri11", "0"), ("tri10", "1"), ("tri10", "0"), ("tri01", "1"),
-    ("tri01", "0"),
-    ("tri00", "1"), ("tri00", "0"),
+    ("tri10", "1"), ("tri01", "1"), ("tri00", "1"),
     # ("cir11", "1"),  # in fast test settings
-    ("cir11", "0"), ("cir10", "1"), ("cir10", "0"), ("cir01", "1"), ("cir01", "0"),
-    ("cir00", "1"), ("cir00", "0"),
+    ("cir10", "1"), ("cir01", "1"), ("cir00", "1"),
     # ("rect11", "1"),  # in fast test settings
-    ("rect11", "0"), ("rect10", "1"), ("rect10", "0"), ("rect01", "1"),
-    # ("rect01", "0"),  # in fast test settings
-    ("rect00", "1"), ("rect00", "0")
+    ("rect10", "1"), ("rect01", "1"), ("rect00", "1"),
 ]
 for env_key, dec_key in all_comb:
     do(setting_env_key=env_key, setting_dec_key=dec_key)
