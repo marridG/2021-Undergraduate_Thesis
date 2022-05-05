@@ -104,7 +104,7 @@ def do(setting_env_key, setting_dec_key):
 
     # sample a traffic sign
     data_obj = TrafficSignsData()
-    data_sample = data_obj.get_sample(category_idx=1, sign_idx=85)
+    data_sample = data_obj.get_sample(category_idx=1, sign_idx=75)
     print(data_sample)
 
     # encode the sampled traffic sign
@@ -247,14 +247,17 @@ def do(setting_env_key, setting_dec_key):
 #             ("rect11", "1"), ("rect11", "0"), ("rect10", "1"), ("rect10", "0"), ("rect01", "1"), ("rect01", "0"),
 #             ("rect00", "1"), ("rect00", "0")]
 all_comb = [
-    # ("tri11", "1"), ("cir11", "1"), ("rect11", "1"), ("rect01", "0"),  # fast test settings
-    ("tri11", "1"), ("tri11", "0"), ("tri10", "1"), ("tri10", "0"), ("tri01", "1"),
+    ("tri11", "1"), ("cir11", "1"), ("rect11", "1"), ("rect01", "0"),  # fast test settings
+    # ("tri11", "1"),  # in fast test settings
+    ("tri11", "0"), ("tri10", "1"), ("tri10", "0"), ("tri01", "1"),
     ("tri01", "0"),
     ("tri00", "1"), ("tri00", "0"),
-    ("cir11", "1"), ("cir11", "0"), ("cir10", "1"), ("cir10", "0"), ("cir01", "1"), ("cir01", "0"),
+    # ("cir11", "1"),  # in fast test settings
+    ("cir11", "0"), ("cir10", "1"), ("cir10", "0"), ("cir01", "1"), ("cir01", "0"),
     ("cir00", "1"), ("cir00", "0"),
-    ("rect11", "1"), ("rect11", "0"), ("rect10", "1"), ("rect10", "0"), ("rect01", "1"),
-    # ("rect01", "0"),
+    # ("rect11", "1"),  # in fast test settings
+    ("rect11", "0"), ("rect10", "1"), ("rect10", "0"), ("rect01", "1"),
+    # ("rect01", "0"),  # in fast test settings
     ("rect00", "1"), ("rect00", "0")
 ]
 for env_key, dec_key in all_comb:
