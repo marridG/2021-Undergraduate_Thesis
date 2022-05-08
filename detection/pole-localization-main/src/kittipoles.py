@@ -22,7 +22,7 @@ mapdistance = 1.5
 
 T_mc_cam0 = np.identity(4)
 T_mc_cam0[:3, :3] \
-    = [[0.0,  0.0, 1.0], [-1.0,  0.0, 0.0], [0.0, -1.0, 0.0]]
+    = [[0.0, 0.0, 1.0], [-1.0, 0.0, 0.0], [0.0, -1.0, 0.0]]
 T_cam0_mc = util.invert_ht(T_mc_cam0)
 T_m_mc = np.identity(4)
 T_m_mc[:3, 3] = np.hstack([0.5 * mapextent[:2], 2.0])
@@ -33,6 +33,10 @@ globalmapfile = 'globalmap_3.npz'
 localmapfile = 'localmaps_3.npz'
 locfileprefix = 'localization'
 evalfile = 'evaluation.npz'
+
+print("Current Path:", os.getcwd())
+os.chdir("..")  # for local pycharm debugger
+print("Current Path (After chdir()):", os.getcwd())
 
 
 def get_map_indices(sequence):
@@ -74,15 +78,17 @@ def save_local_maps(seq):
 
             iscan = imid[i]
             velo = sequence.get_velo(iscan)
-            poleparams = poles_extractor.detect_poles(velo, dis_thr = 0.2, fov_up=3.0, fov_down=-25, proj_H = 64, proj_W = 500, lowest=-1.3)
+            poleparams = poles_extractor.detect_poles(velo, dis_thr=0.2, fov_up=3.0, fov_down=-25, proj_H=64,
+                                                      proj_W=500, lowest=-1.3)
             localpoleparam_xy = poleparams[:, :2]
             localpoleparam_xy = localpoleparam_xy.T
-            localpoleparam_xy = np.vstack([localpoleparam_xy, np.zeros_like(localpoleparam_xy[0]), np.ones_like(localpoleparam_xy[0])]) #4*n
+            localpoleparam_xy = np.vstack(
+                [localpoleparam_xy, np.zeros_like(localpoleparam_xy[0]), np.ones_like(localpoleparam_xy[0])])  # 4*n
             localpoleparam_xy = np.matmul(T_m_velo, localpoleparam_xy)
-            poleparams[:, :2] = localpoleparam_xy[:2,:].T
+            poleparams[:, :2] = localpoleparam_xy[:2, :].T
 
-            map = {'poleparams': poleparams, 
-                'istart': istart[i], 'imid': imid[i], 'iend': iend[i]}
+            map = {'poleparams': poleparams,
+                   'istart': istart[i], 'imid': imid[i], 'iend': iend[i]}
             maps.append(map)
             bar.update(i)
     np.savez(os.path.join(seqdir, localmapfile), maps=maps)
@@ -101,11 +107,12 @@ def save_global_map(seq):
 
             localpoleparam_xy = localpoleparams[:, :2]
             localpoleparam_xy = localpoleparam_xy.T
-            localpoleparam_xy = np.vstack([localpoleparam_xy, np.zeros_like(localpoleparam_xy[0]), np.ones_like(localpoleparam_xy[0])]) #4*n
+            localpoleparam_xy = np.vstack(
+                [localpoleparam_xy, np.zeros_like(localpoleparam_xy[0]), np.ones_like(localpoleparam_xy[0])])  # 4*n
             localpoleparam_xy = np.matmul(T_w_m, localpoleparam_xy)
-            localpoleparams[:, :2] = localpoleparam_xy[:2,:].T
+            localpoleparams[:, :2] = localpoleparam_xy[:2, :].T
             poleparams = np.vstack([poleparams, localpoleparams])
-    
+
     xy = poleparams[:, :2]
     a = poleparams[:, [2]]
     boxes = np.hstack([xy - a, xy + a])
@@ -118,7 +125,7 @@ def save_global_map(seq):
         clustermeans = np.vstack([clustermeans, np.average(
             poleparams[ci, :], axis=0)])
     np.savez(os.path.join(seqdir, globalmapfile), polemeans=clustermeans,
-        polecovs=clustercovs)
+             polecovs=clustercovs)
 
 
 def view_global_map(seq):
@@ -154,8 +161,8 @@ def localize(seq, visualize=False):
         mapaxes.scatter(polemap[:, 0], polemap[:, 1], s=5, c='b', marker='s')
         mapaxes.plot(T_w_velo_gt[:, 0, 3], T_w_velo_gt[:, 1, 3], 'g')
         particles = mapaxes.scatter([], [], s=1, c='r')
-        arrow = mapaxes.arrow(0.0, 0.0, 3.0, 0.0, length_includes_head=True, 
-            head_width=2.1, head_length=3.0, color='k')
+        arrow = mapaxes.arrow(0.0, 0.0, 3.0, 0.0, length_includes_head=True,
+                              head_width=2.1, head_length=3.0, color='k')
         arrowdata = np.hstack(
             [arrow.get_xy(), np.zeros([8, 1]), np.ones([8, 1])]).T
         locpoles = mapaxes.scatter([], [], s=30, c='k', marker='x')
@@ -164,13 +171,13 @@ def localize(seq, visualize=False):
         weightaxes = figure.add_subplot(nplots, 1, 2)
         gridsize = 50
         offset = 10.0
-        visfilter = particlefilter.particlefilter(gridsize**2, 
-            np.identity(4), 0.0, 0.0, polemap, polecov)
+        visfilter = particlefilter.particlefilter(gridsize ** 2,
+                                                  np.identity(4), 0.0, 0.0, polemap, polecov)
         gridcoord = np.linspace(-offset, offset, gridsize)
         x, y = np.meshgrid(gridcoord, gridcoord)
         dxy = np.hstack([x.reshape([-1, 1]), y.reshape([-1, 1])])
-        weightimage = weightaxes.matshow(np.zeros([gridsize, gridsize]), 
-            extent=(-offset, offset, -offset, offset))
+        weightimage = weightaxes.matshow(np.zeros([gridsize, gridsize]),
+                                         extent=(-offset, offset, -offset, offset))
 
     imap = 0
     while locdata[imap]['imid'] < i:
@@ -181,8 +188,8 @@ def localize(seq, visualize=False):
     with progressbar.ProgressBar(max_value=T_w_velo_est.shape[0] - i) as bar:
         while i < T_w_velo_est.shape[0]:
             relodo = util.ht2xyp(
-                util.invert_ht(T_w_velo_gt[i-1]).dot(T_w_velo_gt[i]))
-            relodocov = np.diag((0.02 * relodo)**2)
+                util.invert_ht(T_w_velo_gt[i - 1]).dot(T_w_velo_gt[i]))
+            relodocov = np.diag((0.02 * relodo) ** 2)
             relodo = np.random.multivariate_normal(relodo, relodocov)
             filter.update_motion(relodo, relodocov)
             T_w_velo_est[i] = filter.estimate_pose()
@@ -196,8 +203,8 @@ def localize(seq, visualize=False):
                 poleparams = locdata[imap]['poleparams']
                 npoles = poleparams.shape[0]
                 h = np.diff(poleparams[:, 2:4], axis=1)
-                polepos_m_mid = np.hstack([poleparams[:, :2], 
-                    np.zeros([npoles, 1]), np.ones([npoles, 1])]).T
+                polepos_m_mid = np.hstack([poleparams[:, :2],
+                                           np.zeros([npoles, 1]), np.ones([npoles, 1])]).T
                 polepos_velo_now = T_velo_cam0.dot(T_cam0_now_cam0_mid).dot(
                     T_cam0_m).dot(polepos_m_mid)
                 poleparams = polepos_velo_now[:2].T
@@ -207,7 +214,7 @@ def localize(seq, visualize=False):
                     polepos_w = T_w_velo_est[i].dot(polepos_velo_now)
                     locpoles.set_offsets(polepos_w[:2].T)
 
-                    particleposes = np.tile(T_w_velo_gt[i], [gridsize**2, 1, 1])
+                    particleposes = np.tile(T_w_velo_gt[i], [gridsize ** 2, 1, 1])
                     particleposes[:, :2, 3] += dxy
                     visfilter.particles = particleposes
                     visfilter.weights[:] = 1.0 / visfilter.count
@@ -228,7 +235,7 @@ def localize(seq, visualize=False):
             bar.update(i)
             i += 1
     filename = os.path.join(seqdir, locfileprefix \
-        + datetime.datetime.now().strftime('_%Y-%m-%d_%H-%M-%S.npz'))
+                            + datetime.datetime.now().strftime('_%Y-%m-%d_%H-%M-%S.npz'))
     np.savez(filename, T_w_velo_est=T_w_velo_est)
 
 
@@ -244,7 +251,7 @@ def evaluate(seq):
     cumdist = np.hstack([0.0, np.cumsum(np.linalg.norm(np.diff(
         T_w_velo_gt[:, :2, 3], axis=0), axis=1))])
     timestamps = np.array([arrow.get(timestamp).float_timestamp \
-        for timestamp in sequence.timestamps])
+                           for timestamp in sequence.timestamps])
     t_eval = scipy.interpolate.interp1d(
         cumdist, timestamps)(np.arange(0.0, cumdist[-1], 1.0))
     n = t_eval.size
@@ -254,10 +261,10 @@ def evaluate(seq):
         while timestamps[iodo] < t_eval[ieval]:
             iodo += 1
         T_w_velo_gt_interp[ieval] = util.interpolate_ht(
-            T_w_velo_gt[iodo-1:iodo+1], timestamps[iodo-1:iodo+1], 
+            T_w_velo_gt[iodo - 1:iodo + 1], timestamps[iodo - 1:iodo + 1],
             t_eval[ieval])
     files = [file for file in os.listdir(seqdir) \
-        if os.path.basename(file).startswith(locfileprefix)]
+             if os.path.basename(file).startswith(locfileprefix)]
     poserror = np.full([n, len(files)], np.nan)
     laterror = np.full([n, len(files)], np.nan)
     lonerror = np.full([n, len(files)], np.nan)
@@ -271,7 +278,7 @@ def evaluate(seq):
             while timestamps[iodo] < t_eval[ieval]:
                 iodo += 1
             T_w_velo_est_interp = util.interpolate_ht(
-                T_w_velo_est[iodo-1:iodo+1], timestamps[iodo-1:iodo+1], 
+                T_w_velo_est[iodo - 1:iodo + 1], timestamps[iodo - 1:iodo + 1],
                 t_eval[ieval])
             T_gt_est[ieval] = util.invert_ht(T_w_velo_gt_interp[ieval]).dot(
                 T_w_velo_est_interp)
@@ -292,21 +299,21 @@ def evaluate(seq):
     poserror = np.mean(poserror, axis=0)
     angerror = np.mean(angerror, axis=0)
     plt.savefig(os.path.join(seqdir, 'trajectory_est.svg'))
-    np.savez(os.path.join(seqdir, evalfile), 
-        poserror=poserror, angerror=angerror, posrmse=posrmse, angrmse=angrmse,
-        laterror=laterror, latstd=latstd, lonerror=lonerror, lonstd=lonstd)
+    np.savez(os.path.join(seqdir, evalfile),
+             poserror=poserror, angerror=angerror, posrmse=posrmse, angrmse=angrmse,
+             laterror=laterror, latstd=latstd, lonerror=lonerror, lonstd=lonstd)
     print('poserror: {}\nposrmse: {}\n'
-        'laterror: {}\nlatstd: {}\n'
-        'lonerror: {}\nlonstd: {}\n'
-        'angerror: {}\nangstd: {}\nangrmse: {}'.format(
-            np.mean(poserror), np.mean(posrmse), 
-            np.mean(laterror), np.mean(latstd), 
-            np.mean(lonerror), np.mean(lonstd),
-            np.mean(angerror), np.mean(angstd), np.mean(angrmse)))
+          'laterror: {}\nlatstd: {}\n'
+          'lonerror: {}\nlonstd: {}\n'
+          'angerror: {}\nangstd: {}\nangrmse: {}'.format(
+        np.mean(poserror), np.mean(posrmse),
+        np.mean(laterror), np.mean(latstd),
+        np.mean(lonerror), np.mean(lonstd),
+        np.mean(angerror), np.mean(angstd), np.mean(angrmse)))
 
 
 if __name__ == '__main__':
     save_local_maps(13)
-    save_global_map(13)
-    localize(13, visualize=False)
-    evaluate(13)
+    # save_global_map(13)
+    # localize(13, visualize=False)
+    # evaluate(13)
