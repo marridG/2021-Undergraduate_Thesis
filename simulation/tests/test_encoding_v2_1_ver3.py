@@ -104,7 +104,7 @@ def do(setting_env_key, setting_dec_key):
 
     # sample a traffic sign
     data_obj = TrafficSignsData()
-    data_sample = data_obj.get_sample(category_idx=1, sign_idx=75)
+    data_sample = data_obj.get_sample(category_idx=1, sign_idx=55)
     print(data_sample)
 
     # encode the sampled traffic sign

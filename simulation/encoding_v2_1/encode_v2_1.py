@@ -35,7 +35,8 @@ def encode(sample: Dict[str, Union[str, None, int, Dict[str, int]]],
     _category_2 = sample["encoding"]["idx"]  # int
     _cat_2_bin, _cat_2_real_dec = pattern_v2_1.dec_2_non_dup_bin(num=_category_2, digit=res_length,
                                                                  category_1_idx=_category_1, is_category_2=True)
-    _res_2_cat_2 = np.abs(_cat_2_bin - res[0, :])  # res_repr = abs(target-row)
+    # _res_2_cat_2 = np.abs(_cat_2_bin - res[0, :])  # use xor: res_repr = abs(target-row)
+    _res_2_cat_2 = _cat_2_bin  # NOT use xor
     res[-1, :] = _res_2_cat_2
     print("\tCat_2: %3d (from %3d)," % (_cat_2_real_dec, _category_2), _cat_2_bin)
     print("\t       ==============>", _res_2_cat_2)

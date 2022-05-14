@@ -10,46 +10,84 @@ ENCODING_PATTERN_LENGTH = 4
 
 # sub patterns for 1st category
 _ALL_BIN_PATTERNS = [
-    np.array([0, 0, 1, 1], dtype=int),  # np.array([0, 0, 1, 1], dtype=int),
+    # np.array([0, 0, 1, 1], dtype=int),  # np.array([0, 0, 1, 1], dtype=int),
+    # np.array([0, 1, 1, 0], dtype=int),
+    # np.array([0, 0, 0, 0], dtype=int),
+    np.array([0, 1, 0, 1], dtype=int),  # np.array([0, 0, 1, 1], dtype=int),
+    np.array([0, 1, 1, 1], dtype=int),
     np.array([0, 1, 1, 0], dtype=int),
-    np.array([0, 0, 0, 0], dtype=int),
 ]
 # indices to be avoided so as not to emerge the same sub-sequence (for 1st category) used on the boards
 _all_avoid_bin_dec_set = set()  # seq = board_dup + category_1_seq
+# avoid = [
+#     ("warning", np.array([0, 0, 0, 0, 1, 1, 1, 1], dtype=int),
+#      [[0, i1, 1, i3, 1, i5, 0, i7]
+#       for i1 in range(2) for i3 in range(2) for i5 in range(2) for i7 in range(2)] + \
+#      [[i0, 0, i2, 1, i4, 1, i6, 0]
+#       for i0 in range(2) for i2 in range(2) for i4 in range(2) for i6 in range(2)] + \
+#      [[0, i1, 0, i3, 0, i5, 0, i7]
+#       for i1 in range(2) for i3 in range(2) for i5 in range(2) for i7 in range(2)] + \
+#      [[i0, 0, i2, 0, i4, 0, i6, 0]
+#       for i0 in range(2) for i2 in range(2) for i4 in range(2) for i6 in range(2)] + \
+#      [[1, 1, 1, 1, 1, 1, 1, 1], [0, 0, 0, 0, 1, 1, 1, 1]]),
+#
+#     ("prohibitory", np.array([0, 0, 1, 1, 1, 1, 0, 0], dtype=int),
+#      [[0, i1, 0, i3, 1, i5, 1, i7]
+#       for i1 in range(2) for i3 in range(2) for i5 in range(2) for i7 in range(2)] + \
+#      [[i0, 0, i2, 0, i4, 1, i6, 1]
+#       for i0 in range(2) for i2 in range(2) for i4 in range(2) for i6 in range(2)] + \
+#      [[0, i1, 0, i3, 0, i5, 0, i7]
+#       for i1 in range(2) for i3 in range(2) for i5 in range(2) for i7 in range(2)] + \
+#      [[i0, 0, i2, 0, i4, 0, i6, 0]
+#       for i0 in range(2) for i2 in range(2) for i4 in range(2) for i6 in range(2)] + \
+#      [[1, 1, 1, 1, 1, 1, 1, 1], [0, 0, 1, 1, 1, 1, 0, 0]]),
+#
+#     ("mandatory", np.array([0, 0, 0, 0, 0, 0, 0, 0], dtype=int),
+#      [[0, i1, 0, i3, 1, i5, 1, i7]
+#       for i1 in range(2) for i3 in range(2) for i5 in range(2) for i7 in range(2)] + \
+#      [[i0, 0, i2, 0, i4, 1, i6, 1]
+#       for i0 in range(2) for i2 in range(2) for i4 in range(2) for i6 in range(2)] + \
+#      [[0, i1, 1, i3, 1, i5, 0, i7]
+#       for i1 in range(2) for i3 in range(2) for i5 in range(2) for i7 in range(2)] + \
+#      [[i0, 0, i2, 1, i4, 1, i6, 0]
+#       for i0 in range(2) for i2 in range(2) for i4 in range(2) for i6 in range(2)] + \
+#      [[1, 1, 1, 1, 1, 1, 1, 1], [0, 0, 0, 0, 0, 0, 0, 0]])
+# ]
 avoid = [
-    ("warning", np.array([0, 0, 0, 0, 1, 1, 1, 1], dtype=int),
-     [[0, i1, 1, i3, 1, i5, 0, i7]
+    ("warning", np.array([0, 0, 1, 1, 1, 1, 0, 0], dtype=int),
+     [[0, i1, 1, i3, 0, i5, 1, i7]
       for i1 in range(2) for i3 in range(2) for i5 in range(2) for i7 in range(2)] + \
-     [[i0, 0, i2, 1, i4, 1, i6, 0]
+     [[i0, 0, i2, 1, i4, 0, i6, 1]
       for i0 in range(2) for i2 in range(2) for i4 in range(2) for i6 in range(2)] + \
-     [[0, i1, 0, i3, 0, i5, 0, i7]
+     [[0, i1, 1, i3, 1, i5, 1, i7]
       for i1 in range(2) for i3 in range(2) for i5 in range(2) for i7 in range(2)] + \
-     [[i0, 0, i2, 0, i4, 0, i6, 0]
-      for i0 in range(2) for i2 in range(2) for i4 in range(2) for i6 in range(2)] + \
-     [[1, 1, 1, 1, 1, 1, 1, 1], [0, 0, 0, 0, 1, 1, 1, 1]]),
-
-    ("prohibitory", np.array([0, 0, 1, 1, 1, 1, 0, 0], dtype=int),
-     [[0, i1, 0, i3, 1, i5, 1, i7]
-      for i1 in range(2) for i3 in range(2) for i5 in range(2) for i7 in range(2)] + \
-     [[i0, 0, i2, 0, i4, 1, i6, 1]
-      for i0 in range(2) for i2 in range(2) for i4 in range(2) for i6 in range(2)] + \
-     [[0, i1, 0, i3, 0, i5, 0, i7]
-      for i1 in range(2) for i3 in range(2) for i5 in range(2) for i7 in range(2)] + \
-     [[i0, 0, i2, 0, i4, 0, i6, 0]
+     [[i0, 0, i2, 1, i4, 1, i6, 1]
       for i0 in range(2) for i2 in range(2) for i4 in range(2) for i6 in range(2)] + \
      [[1, 1, 1, 1, 1, 1, 1, 1], [0, 0, 1, 1, 1, 1, 0, 0]]),
 
-    ("mandatory", np.array([0, 0, 0, 0, 0, 0, 0, 0], dtype=int),
-     [[0, i1, 0, i3, 1, i5, 1, i7]
+    ("prohibitory", np.array([0, 0, 1, 1, 1, 1, 1, 1], dtype=int),
+     [[0, i1, 1, i3, 0, i5, 1, i7]
       for i1 in range(2) for i3 in range(2) for i5 in range(2) for i7 in range(2)] + \
-     [[i0, 0, i2, 0, i4, 1, i6, 1]
+     [[i0, 0, i2, 1, i4, 0, i6, 1]
       for i0 in range(2) for i2 in range(2) for i4 in range(2) for i6 in range(2)] + \
      [[0, i1, 1, i3, 1, i5, 0, i7]
       for i1 in range(2) for i3 in range(2) for i5 in range(2) for i7 in range(2)] + \
      [[i0, 0, i2, 1, i4, 1, i6, 0]
       for i0 in range(2) for i2 in range(2) for i4 in range(2) for i6 in range(2)] + \
-     [[1, 1, 1, 1, 1, 1, 1, 1], [0, 0, 0, 0, 0, 0, 0, 0]])
+     [[1, 1, 1, 1, 1, 1, 1, 1], [0, 0, 1, 1, 1, 1, 1, 1]]),
+
+    ("mandatory", np.array([0, 0, 1, 1, 0, 0, 1, 1], dtype=int),
+     [[0, i1, 1, i3, 1, i5, 1, i7]
+      for i1 in range(2) for i3 in range(2) for i5 in range(2) for i7 in range(2)] + \
+     [[i0, 0, i2, 1, i4, 1, i6, 1]
+      for i0 in range(2) for i2 in range(2) for i4 in range(2) for i6 in range(2)] + \
+     [[0, i1, 1, i3, 1, i5, 0, i7]
+      for i1 in range(2) for i3 in range(2) for i5 in range(2) for i7 in range(2)] + \
+     [[i0, 0, i2, 1, i4, 1, i6, 0]
+      for i0 in range(2) for i2 in range(2) for i4 in range(2) for i6 in range(2)] + \
+     [[1, 1, 1, 1, 1, 1, 1, 1], [0, 0, 1, 1, 0, 0, 1, 1]]),
 ]
+USE_XOR = False
 xor_use_avoid_dec_set = set([])
 xor_not_use_avoid_dec_set = set([])
 xor_use_avoid_cnt_by_cat = {"warning": 0, "prohibitory": 0, "mandatory": 0}
@@ -67,7 +105,10 @@ for _c1_str, _c1, _c2s in avoid:
         if __cat_2_dec_real <= _c2_cnt - 1:
             xor_use_avoid_dec_set.add(__cat_2_dec_real)
             xor_use_avoid_cnt_by_cat[_c1_str] += 1
-        _all_avoid_bin_dec_set.add(__cat_2_dec_real)
+        if USE_XOR is True:
+            _all_avoid_bin_dec_set.add(__cat_2_dec_real)
+        else:
+            _all_avoid_bin_dec_set.add(__cat_2_dec)
 print("使用异或", len(xor_use_avoid_dec_set), xor_use_avoid_cnt_by_cat)
 print("不使用异或", len(xor_not_use_avoid_dec_set), xor_not_use_avoid_cnt_by_cat)
 # _all_avoid_bin_dec_set = set()  # seq = board_dup + category_1_seq

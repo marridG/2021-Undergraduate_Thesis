@@ -214,8 +214,9 @@ def _decode_handful_lines(lines_decoded: np.ndarray, cat_1_idx: int) -> Dict[str
     if lines_are_full_length is False or lines_decoded.shape[0] < pattern_v2_1.ENCODING_LEVELS:
         return res
 
-    # [case 2] two valid lines for category_1(LINE#1) and category_2(LINE#0) => continue decoding
-    cat_2_bin = lines_decoded[0] ^ lines_decoded[1]
+    # [case 2] two valid lines for category_1(LINE#1) and category_2(LINE#2) => continue decoding
+    # cat_2_bin = lines_decoded[0] ^ lines_decoded[1]  # use xor
+    cat_2_bin = lines_decoded[1]  # NOT use xor
     cat_2_idx, _ = pattern_v2_1.non_dup_bin_2_dec(num=cat_2_bin, category_1_idx=cat_1_idx, is_category_2=True)
     res["category_2"] = cat_2_idx
     return res
