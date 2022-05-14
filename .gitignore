@@ -155,3 +155,5 @@ dmypy.json
 cython_debug/
 
 /detection/pole-localization-main/kitti/raw_data/
+/detection/my_detection/utils/BV_1440.json
+/detection/my_detection/test.py
