@@ -1,4 +1,6 @@
+import time
 import math
+import numpy as np
 from tqdm import tqdm
 import json
 
@@ -147,6 +149,8 @@ def do(setting_env_key, setting_dec_key):
         for _sample_idx in _iter_obj:
             _sample = sample_res[_sample_idx]
             _sample_loc = sample_res_loc[_sample_idx]
+            # np.save("sample.npy", _sample)
+            # exit()
             try:
                 _sample_decoded, _sample_decoded_info, _sample_step_cnt = decode(
                     sign_data_obj=data_obj,
@@ -214,6 +218,7 @@ def do(setting_env_key, setting_dec_key):
                       cnt_tol_b, cnt_tol_a)
 
     print()
+    toc1 = time.perf_counter()
     excel_str = []
     for dist in range(10, 140 + 10, 10):  # [10, 40]:  # range(10, 140 + 10, 10):
         if 10 == dist:
@@ -234,6 +239,9 @@ def do(setting_env_key, setting_dec_key):
     for i in excel_str:
         print(i)
 
+    toc2 = time.perf_counter()
+    print("[Time Elapsed - Altogether]:", toc2 - toc1)
+
 
 # res = []
 # for env_key in ALL_ENV_SETTINGS.keys():
@@ -244,6 +252,7 @@ def do(setting_env_key, setting_dec_key):
 #             ("cir11", "1"), ("cir10", "1"), ("cir01", "1"), ("cir00", "1"),
 #             ("rect11", "1"), ("rect10", "1"), ("rect01", "1"), ("rect00", "1")]
 all_comb = [
+    ("tri01", "1"),
     ("tri11", "1"), ("cir11", "1"), ("rect11", "1"),  # fast test settings
     # ("tri11", "1"),  # in fast test settings
     ("tri10", "1"), ("tri01", "1"), ("tri00", "1"),
@@ -252,5 +261,8 @@ all_comb = [
     # ("rect11", "1"),  # in fast test settings
     ("rect10", "1"), ("rect01", "1"), ("rect00", "1"),
 ]
+ENABLE_TIMER = False
 for env_key, dec_key in all_comb:
     do(setting_env_key=env_key, setting_dec_key=dec_key)
+    if ENABLE_TIMER is True:
+        exit()
