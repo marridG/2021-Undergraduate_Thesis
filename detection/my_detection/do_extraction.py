@@ -5,9 +5,23 @@ import pickle
 import data_loader
 import board_extractor
 import plane_projection
+import point_cloud_visualization
 
 file = "data/seq60_00000.bin"
 data = data_loader.load_data(file=file)
+
+# # visualize
+# data_copy = data.copy()
+# # data_copy[:, 3] *= 256.
+# # data_copy[:, 3] /= 255.
+# # print(np.max(data_copy[:, 3]), np.min(data_copy[:, 3]))
+# # data_copy[:, 3] *= 1.2
+# # data_copy[:, 3] += 0.1
+# # print(np.max(data_copy[:, 3]), np.min(data_copy[:, 3]))
+# # data_copy[:, 3] = np.clip(data_copy[:, 3], 0., 0.99)
+# # print(np.max(data_copy[:, 3]), np.min(data_copy[:, 3]))
+# point_cloud_visualization.vis_arr_by_intensity_at_viewpoint(arr=data_copy, title="raw data", point_size=-1)
+# exit()
 
 ENABLE_TIMER = False
 # extract planes
