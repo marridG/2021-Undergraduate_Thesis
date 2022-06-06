@@ -923,6 +923,90 @@ if do_draw_this_idx:
                 plt.close()
                 print("SAVED:", fn)
 
+"""
+# === #14 === 【ver3】每种指示牌 不同距离下 正确率（一级/一级&二级）+筛选率 (all ### comb)
+PLOT_GROUP_IDX += 1
+do_draw_this_idx = PLOT_DO_DRAW_REDRAW_ALL is True or PLOT_DO_DRAW[PLOT_GROUP_IDX] is True
+print("===== IDX=%d: %s =====" % (PLOT_GROUP_IDX, "DO DRAW" if do_draw_this_idx is True else "SKIPPED"))
+if do_draw_this_idx:
+    colors = cm.get_cmap("rainbow")(np.linspace(0, 1, 3))
+    # ax_tree_color, ax_tol_color = "grey", "green"
+    ax_tree_color, ax_tol_color, c = colors
+    for bool_scale in [True]:  # ALL_SETTING_BOOL:
+        for bool_ratio in [True]:  # ALL_SETTING_BOOL:
+            for shape in ["圆形"]:  # ALL_SHAPES:
+                # plt.clf()
+                fig, ax = plt.subplots()
+                ax_tree = ax.twinx()
+                ax_tol = ax.twinx()
+                # acc lines and points
+                data_all = df_v3.loc[(df_v3["形状"] == shape)
+                                     & (df_v3["双行"] == ALL_SETTING_BOOL_2_VAL_STR[bool_scale])
+                                     & (df_v3["比例"] == ALL_SETTING_BOOL_2_VAL_STR[bool_ratio])]
+                data = data_all[["1正确率", "2正确率"]]
+                data = data.values  # <np.ndarray> of shape (cnt_group, 2)
+
+                labels = ["大类信息正确率", "全部信息正确率"]
+                line_styles = ["-", "--"]
+                for _d, _l, _ls in zip(data.T, labels, line_styles):
+                    ax.plot(_d, label=_l, linestyle=_ls, color=c, linewidth=SIZE_LINE)
+                    ax.scatter(ALL_X_TICKS, _d, color=c, s=SIZE_SCATTER)
+                    # print(_d)
+                ax.set_xlabel("距离 / m", fontsize=13)
+                ax.set_xticks(ALL_X_TICKS), ax.set_xticklabels(ALL_X_TICK_LABELS)
+                ax.set_ylabel("比率", fontsize=13)
+                ax.set_yticks(ALL_Y_TICKS), ax.set_yticklabels(ALL_Y_TICK_LABELS)
+                ax.set_xlim(ALL_X_TICKS[0], ALL_X_TICKS[-1])
+                ax.set_ylim(ALL_Y_TICKS[0], ALL_Y_TICKS[-1])
+
+                # filter ratio bars
+                # tree
+                data = data_all["语义筛选"]
+                data = data.values  # <np.ndarray> of shape (1, 2)
+                ax_tree.bar(ALL_X_TICKS, height=data, width=ALL_X_TICKS[-1] - ALL_X_TICKS[-2],
+                            label="语义剪枝模块筛选率", bottom=0, color=ax_tree_color, alpha=0.2)
+                ax_tree.set_ylabel("语义剪枝筛选率", loc="bottom", color=ax_tree_color, fontsize=13)
+                ax_tree_step = 0.1
+                ax_tree_lim = (0, get_lim(np.max(data), step=ax_tree_step))
+                ax_tree.set_yticks(np.arange(ax_tree_lim[0], ax_tree_lim[1] + ax_tree_step, ax_tree_step))
+                ax_tree.set_yticklabels(get_percentage_y_ticks(lim=ax_tree_lim, step=ax_tree_step),
+                                        color=ax_tree_color)
+                ax_tree.set_ylim(ax_tree_lim[0], ax_tree_lim[1] * 2 + ax_tree_step * 2)
+                # combine
+                data = data_all["合并筛选"]
+                data = data.values  # <np.ndarray> of shape (1, 2)
+                ax_tol.bar(ALL_X_TICKS, height=-1 * data, width=ALL_X_TICKS[-1] - ALL_X_TICKS[-2],
+                           label="可能合并模块合并率", bottom=0, color=ax_tol_color, alpha=0.2)
+                ax_tol.set_ylabel("合并率", loc="top", color=ax_tol_color, fontsize=13)
+                ax_tol_step = 0.1
+                ax_tol_lim = (-1 * get_lim(np.max(data), step=ax_tol_step), 0)
+                ax_tol.set_yticks(np.arange(ax_tol_lim[0], ax_tol_lim[1] + ax_tol_step, ax_tol_step))
+                ax_tol.set_yticklabels([i[1:] if "-" == i[0] else i
+                                        for i in get_percentage_y_ticks(lim=ax_tol_lim, step=ax_tol_step)],
+                                       color=ax_tol_color)
+                ax_tol.set_ylim(ax_tol_lim[0] * 2 - ax_tol_step * 2, ax_tol_lim[1])
+
+                # plt.title(get_setting_str(scale=bool_scale, ratio=bool_ratio, delta=None, zero=None,
+                #                           # lines=["模块筛选率(合并率) = 1 - 进入模块数/离开模块数, 除数为零结果按 0 计"]
+                #                           ),
+                #           fontsize=SIZE_SUB_TITLE_SUB_FONT)  # sub-title
+                # fig.suptitle("%s指示牌不同距离下回溯法解码正确率,语义剪枝筛选率,可能合并率" % shape)  # title
+                # fig.legend(loc="upper right", bbox_to_anchor=(1, 1), bbox_transform=ax.transAxes)
+                fig.legend(loc="lower right", bbox_to_anchor=(0.85, 0.1), bbox_transform=ax.transAxes,
+                           prop={"size": 10})
+                # fig.subplots_adjust(top=0.85)
+                # fig.subplots_adjust(left=0.093, bottom=0.083, right=0.92)
+                fig.subplots_adjust(top=0.95, left=0.1, bottom=0.1, right=0.9)
+                # plt.show()
+                # fn = PATH + "[%d] %s-%d%d-#_正确率+模块筛选率.png" % \
+                #      (PLOT_GROUP_IDX, shape, int(bool_scale), int(bool_ratio))
+                # plt.savefig(fn, dpi=200)
+                fn = r"C:\Users\John\Downloads\1.png"
+                plt.savefig(fn, dpi=500)
+                plt.close()
+                print("SAVED:", fn)
+"""  # no titles + larger labels version, for circle-11X only
+
 # === #15 === 【ver3】每种指示牌 不同距离下 【两个比例的四个组合】 正确率（一级） (11#-10#-01#-00#)
 PLOT_GROUP_IDX += 1
 do_draw_this_idx = PLOT_DO_DRAW_REDRAW_ALL is True or PLOT_DO_DRAW[PLOT_GROUP_IDX] is True
