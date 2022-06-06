@@ -134,7 +134,7 @@ def vis_arr_by_intensity_at_viewpoint(arr: np.ndarray, view_file: str = "utils/c
     drawn = plt.scatter(range(arr.shape[0]), arr_i, color=colors)
     cb = fig.colorbar(drawn)  # , extend='both', shrink=1, label="Temperature", pad=0.01)
     # plt.colorbar(drawn)  # , ticks=[0, 0.25, 0.5, 0.75, 1])
-    plt.savefig("color-bar-window=%s.png" % title, dpi=200)
+    plt.savefig("utils/pt_cloud_color_bar/color-bar-window=%s.png" % title, dpi=200)
 
     vis = open3d.visualization.Visualizer()
     vis.create_window(window_name=title, width=1728, height=972)
