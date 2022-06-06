@@ -4,6 +4,7 @@
 
 *.png
 *.txt
+*.npy
 detection/pole-localization-main/kitti
 
 # IntelliJ project files
