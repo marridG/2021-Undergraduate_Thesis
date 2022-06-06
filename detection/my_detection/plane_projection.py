@@ -1,8 +1,10 @@
+import time
 import numpy as np
 import open3d
 from matplotlib import pyplot as plt
 
 from simulation.utils import dist_2_margin
+import point_cloud_visualization
 
 
 def display_inlier_outlier(cloud, ind):
@@ -56,8 +58,7 @@ def project_onto_plane_arr(arr, p_a, p_b, p_c, p_d, x0=0, y0=0, z0=0):
     a = (x1 - x0) / r
     b = (y1 - y0) / r
     c = (z1 - z0) / r
-    t = -1 * (A * source[:, 0] + B * source[:, 1] + C * source[
-                                                        :, 2] + D)
+    t = -1 * (A * source[:, 0] + B * source[:, 1] + C * source[:, 2] + D)
     t = t / (a * A + b * B + c * C)
     arr[:, 0] = x1 + a * t
     arr[:, 1] = y1 + b * t
@@ -78,11 +79,27 @@ def handler(xyzi, dist_thresh=0.05,
             intthr=0.3,
             hori_angle_resol=0.1, vert_angle_resol=0.33, pixel_margin=50,
             visualize=-1, validate=True):
+    toc1 = time.perf_counter()
+
     xyz = xyzi[:, :3]
-    xyzi[:, 3] *= 256.  # restore the wrong intensity
+
+    if False:
+        pcd = open3d.geometry.PointCloud()
+        pcd.points = open3d.utility.Vector3dVector(xyz)
+        vis = open3d.visualization.Visualizer()
+        vis.create_window(window_name='pcd', width=1728, height=972)
+        vis.add_geometry(pcd)
+        vis.get_render_option().load_from_json('renderoption.json')
+        vis.run()  # user changes the view and press "q" to terminate
+        param = vis.get_view_control().convert_to_pinhole_camera_parameters()
+        open3d.io.write_pinhole_camera_parameters("utils/camera-plate.json", param)
+        # vis.destroy_window()
 
     if -1 < visualize <= 1:
-        open3d.visualization.draw_geometries([open3d.geometry.PointCloud(points=open3d.utility.Vector3dVector(xyz))])
+        # open3d.visualization.draw_geometries([open3d.geometry.PointCloud(points=open3d.utility.Vector3dVector(xyz))])
+        point_cloud_visualization.vis_arr_by_intensity_at_viewpoint(arr=xyzi, title="raw plate",
+                                                                    view_file="utils/camera-plate.json",
+                                                                    intensity_color=False)
         # viewer = open3d.visualization.Visualizer()
         # viewer.create_window(window_name="Raw Points")
         # viewer.add_geometry(xyzi2pc(xyz=xyzi[:, :3], intensities=intensity2color(xyzi[:, 3])))
@@ -100,11 +117,12 @@ def handler(xyzi, dist_thresh=0.05,
                                              num_iterations=1000)
     [plane_a, plane_b, plane_c, plane_d] = plane_model
     print("Plane Fit as: %fx + %fy + %fz + %f = 0" % (plane_a, plane_b, plane_c, plane_d))
+    pcd_proc = pcd.select_by_index(inliers)
 
     # === 2 === remove outliers
     # reference: http://www.open3d.org/docs/release/tutorial/geometry/pointcloud_outlier_removal.html
     # doc: http://www.open3d.org/docs/release/python_api/open3d.geometry.PointCloud.html?highlight=remove_statistical_outlier#open3d.geometry.PointCloud.remove_statistical_outlier
-    pcd_rmv, _pcd_inlier_idx = pcd.remove_statistical_outlier(nb_neighbors=20, std_ratio=2.0)
+    pcd_rmv, _pcd_inlier_idx = pcd_proc.remove_statistical_outlier(nb_neighbors=20, std_ratio=2.0)
     xyzi_rmv = xyzi[_pcd_inlier_idx]  # 3d points, shape (n,4); identity assured (see below)
     if validate:  # check whether points from `pcd_rmv` are identical with those in `xyzi_rmv`
         _pts_pcd = np.asarray(pcd_rmv.points)  # .tolist()
@@ -113,17 +131,45 @@ def handler(xyzi, dist_thresh=0.05,
               np.array_equal(_pts_pcd, _pts_ori))
 
     if -1 < visualize <= 2:
-        viewer = open3d.visualization.Visualizer()
-        viewer.create_window(window_name="After Removal Sliced from Raw Points")
-        viewer.add_geometry(xyzi2pc(xyz=xyzi_rmv[:, :3], intensities=xyzi_rmv[:, 3]))
-        opt = viewer.get_render_option()
-        opt.show_coordinate_frame = True
-        viewer.run()
-        viewer.destroy_window()
-        del viewer
-        # open3d.visualization.draw_geometries([xyzi2pc(xyz=xyzi_rmv[:, :3], intensities=xyzi_rmv[:, 3])],
-        #                                      window_name="After Removal Sliced from Raw Points")
-        display_inlier_outlier(pcd_rmv, _pcd_inlier_idx)
+        # viewer = open3d.visualization.Visualizer()
+        # viewer.create_window(window_name="After Removal Sliced from Raw Points")
+        # viewer.add_geometry(xyzi2pc(xyz=xyzi_rmv[:, :3], intensities=xyzi_rmv[:, 3]))
+        # opt = viewer.get_render_option()
+        # opt.show_coordinate_frame = True
+        # viewer.run()
+        # viewer.destroy_window()
+        # del viewer
+        # # open3d.visualization.draw_geometries([xyzi2pc(xyz=xyzi_rmv[:, :3], intensities=xyzi_rmv[:, 3])],
+        # #                                      window_name="After Removal Sliced from Raw Points")
+        # display_inlier_outlier(pcd_rmv, _pcd_inlier_idx)
+        inlier_cloud = pcd_rmv.select_by_index(_pcd_inlier_idx)
+        outlier_cloud_1 = pcd.select_by_index(inliers, invert=True)
+        outlier_cloud_2 = pcd.select_by_index(_pcd_inlier_idx, invert=True)
+
+        # print("Showing outliers (red) and inliers (gray): ")
+        outlier_cloud_1.paint_uniform_color([1, 1, 0])  # yellow
+        outlier_cloud_2.paint_uniform_color([1, 0, 0])  # red
+        inlier_cloud.paint_uniform_color([0.8, 0.8, 0.8])
+
+        vis = open3d.visualization.Visualizer()
+        vis.create_window(window_name="Point Removals", width=1728, height=972)
+        ctr = vis.get_view_control()
+        param = open3d.io.read_pinhole_camera_parameters("utils/camera-plate.json")
+        vis.add_geometry(inlier_cloud)
+        vis.add_geometry(outlier_cloud_1)
+        vis.add_geometry(outlier_cloud_2)
+        opt = vis.get_render_option()
+        opt.point_size = 10
+        ctr.convert_from_pinhole_camera_parameters(param)
+        vis.run()
+        vis.destroy_window()
+        # open3d.visualization.draw_geometries([inlier_cloud, outlier_cloud_1, outlier_cloud_2],
+        #                                      window_name="outliers",
+        #                                      # zoom=0.3412,
+        #                                      # front=[0.4257, -0.2125, -0.8795],
+        #                                      # lookat=[2.6172, 2.0475, 1.532],
+        #                                      # up=[-0.0694, -0.9768, 0.2024]
+        #                                      )
 
     # === 3 === project onto the fit plane
     xyzi_rmv_proj = project_onto_plane_arr(arr=xyzi_rmv, p_a=plane_a, p_b=plane_b, p_c=plane_c, p_d=plane_d,
@@ -144,8 +190,11 @@ def handler(xyzi, dist_thresh=0.05,
         # opt.show_coordinate_frame = True
         # viewer.run()
         # viewer.destroy_window()
-        open3d.visualization.draw_geometries([xyzi2pc(xyz=xyzi_rmv_proj[:, :3], intensities=xyzi_rmv_proj[:, 3])],
-                                             window_name="After Projection")
+        point_cloud_visualization.vis_arr_by_intensity_at_viewpoint(arr=xyzi_rmv_proj, title="After Projection",
+                                                                    view_file="utils/camera-plate.json",
+                                                                    intensity_color=False)
+        # open3d.visualization.draw_geometries([xyzi2pc(xyz=xyzi_rmv_proj[:, :3], intensities=xyzi_rmv_proj[:, 3])],
+        #                                      window_name="After Projection")
 
     # === 4 === thresh to binary
     xyi_rmv_proj_bin = xyi_rmv_proj.copy()
@@ -159,6 +208,15 @@ def handler(xyzi, dist_thresh=0.05,
         ax1 = fig.add_subplot(111, projection='3d')
         ax1.scatter(xyz[:, 0], xyz[:, 1], xyz[:, 2], s=10, c="red", marker='.')
         ax1.set_xlabel('x'), ax1.set_ylabel('y'), ax1.set_zlabel('z')
+        # normal vector of the fit plane
+        plane_norm = np.array([plane_a, plane_b, plane_c])  # already normed
+        x_start, y_start, z_start = np.mean(xyz[:, 0]), np.mean(xyz[:, 1]), np.mean(xyz[:, 2])
+        plot_norm_len = 5
+        ax1.quiver(x_start, y_start, z_start,
+                   x_start + plane_norm[0] * plot_norm_len,
+                   y_start + plane_norm[1] * plot_norm_len,
+                   z_start + plane_norm[2] * plot_norm_len,
+                   arrow_length_ratio=0.1)
         # fit plane
         xx = np.arange(np.min(xyz[:, 0]), np.max(xyz[:, 0]), 0.05)  # (min,max)=(-3.586, -3.383)
         yy = np.arange(np.min(xyz[:, 1]), np.max(xyz[:, 1]), 0.05)  # (min,max)=(0.087, 0.611)
@@ -179,13 +237,20 @@ def handler(xyzi, dist_thresh=0.05,
     scan_x_min = np.min(scan_x)
     scan_y_min = np.min(scan_y)
 
-    proj_x = np.round((scan_x - scan_x_min) * 1000. / hori_margin).astype(int)
-    proj_y = np.round((scan_y - scan_y_min) * 1000. / vert_margin).astype(int)
+    proj_x = np.round((scan_x - scan_x_min) * 1000. / vert_margin).astype(int)
+    proj_y = np.round((scan_y - scan_y_min) * 1000. / hori_margin).astype(int)
     proj_x -= np.min(proj_x)
     proj_y -= np.min(proj_y)
+    # proj_x = np.round((scan_x - scan_x_min) * 1000.).astype(int)
+    # proj_y = np.round((scan_y - scan_y_min) * 1000.).astype(int)
     # binary intensity for each pixel (-1 is no data)
     xyi_rmv_proj_bin_grid = np.full((np.max(proj_y) + 1, np.max(proj_x) + 1), -1, dtype=int)
     xyi_rmv_proj_bin_grid[proj_y, proj_x] = scan_i
+
+    np.save("binary.npy", xyi_rmv_proj_bin_grid)
+
+    toc2 = time.perf_counter()
+    print("project + binarization:", toc2 - toc1)
 
     return None
 

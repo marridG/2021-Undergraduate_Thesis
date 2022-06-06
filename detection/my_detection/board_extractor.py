@@ -1,3 +1,4 @@
+import time
 import numpy as np
 from numba import jit
 import open3d
@@ -18,6 +19,7 @@ def detect_poles(xyz, neighbourthr=0.5, min_point_num=3, dis_thr=0.08, width_thr
         "cluster_filter_3": {"pt_cloud": None, "pt_cloud_label": None},
     }
 
+    toc1 = time.perf_counter()
     range_data, proj_vertex, proj_idx, xyzi_z_cut = range_projection(
         xyz, fov_up=fov_up, fov_down=fov_down,
         proj_H=proj_H, proj_W=proj_W,
@@ -26,6 +28,8 @@ def detect_poles(xyz, neighbourthr=0.5, min_point_num=3, dis_thr=0.08, width_thr
         low=lowest, high=highest)
     results["range_data"] = range_data
     print("Range Projection Finished. Projected into", range_data.shape)
+    # np.save("range_data.npy", range_data)
+    # exit()
 
     height = range_data.shape[0]
     width = range_data.shape[1]
@@ -36,6 +40,9 @@ def detect_poles(xyz, neighbourthr=0.5, min_point_num=3, dis_thr=0.08, width_thr
 
     clusters = gen_clusters(open_set, range_data, height, width, min_point_num=min_point_num, dis_thr=dis_thr)
     print("Raw Clustering Finished with %d Clusters" % len(clusters))
+    toc2 = time.perf_counter()
+    print("cluster:", toc2 - toc1)
+    toc1 = time.perf_counter()
 
     # === 1 visualize
     if middle_res:
@@ -299,6 +306,10 @@ def detect_poles(xyz, neighbourthr=0.5, min_point_num=3, dis_thr=0.08, width_thr
             # __xyzi = proj_vertex[__range_img_index[0]][__range_img_index[1]]
             pt_xyzi = np.append(pt_xyzi, __xyzi).reshape(-1, 4)
         res_cluster_points.append(pt_xyzi)
+
+    toc2 = time.perf_counter()
+    print("cluster filter:", toc2 - toc1)
+    toc1 = time.perf_counter()
 
     return res_cluster_points, results
 
