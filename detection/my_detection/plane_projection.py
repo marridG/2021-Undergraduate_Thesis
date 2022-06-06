@@ -247,7 +247,7 @@ def handler(xyzi, dist_thresh=0.05,
     xyi_rmv_proj_bin_grid = np.full((np.max(proj_y) + 1, np.max(proj_x) + 1), -1, dtype=int)
     xyi_rmv_proj_bin_grid[proj_y, proj_x] = scan_i
 
-    np.save("binary.npy", xyi_rmv_proj_bin_grid)
+    np.save("plot_binary/binary.npy", xyi_rmv_proj_bin_grid)
 
     toc2 = time.perf_counter()
     print("project + binarization:", toc2 - toc1)
