@@ -1,3 +1,4 @@
+import time
 import math
 from tqdm import tqdm
 import json
@@ -214,6 +215,7 @@ def do(setting_env_key, setting_dec_key):
                       cnt_tol_b, cnt_tol_a)
 
     print()
+    toc1 = time.perf_counter()
     excel_str = []
     for dist in range(10, 140 + 10, 10):
         if 10 == dist:
@@ -233,6 +235,9 @@ def do(setting_env_key, setting_dec_key):
     print(setting_env_key, setting_dec_key + "0")
     for i in excel_str:
         print(i)
+
+    toc2 = time.perf_counter()
+    print("[Time Elapsed - Altogether]:", toc2 - toc1)
 
 
 # res = []
@@ -260,5 +265,8 @@ all_comb = [
     # ("rect01", "0"),  # in fast test settings
     ("rect00", "1"), ("rect00", "0")
 ]
+ENABLE_TIMER = False
 for env_key, dec_key in all_comb:
     do(setting_env_key=env_key, setting_dec_key=dec_key)
+    if ENABLE_TIMER is True:
+        exit()

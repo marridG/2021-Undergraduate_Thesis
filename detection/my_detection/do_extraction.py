@@ -5,14 +5,29 @@ import pickle
 import data_loader
 import board_extractor
 import plane_projection
+import point_cloud_visualization
 
 file = "data/seq60_00000.bin"
 data = data_loader.load_data(file=file)
 
+# # visualize
+# data_copy = data.copy()
+# # data_copy[:, 3] *= 256.
+# # data_copy[:, 3] /= 255.
+# # print(np.max(data_copy[:, 3]), np.min(data_copy[:, 3]))
+# # data_copy[:, 3] *= 1.2
+# # data_copy[:, 3] += 0.1
+# # print(np.max(data_copy[:, 3]), np.min(data_copy[:, 3]))
+# # data_copy[:, 3] = np.clip(data_copy[:, 3], 0., 0.99)
+# # print(np.max(data_copy[:, 3]), np.min(data_copy[:, 3]))
+# point_cloud_visualization.vis_arr_by_intensity_at_viewpoint(arr=data_copy, title="raw data", point_size=-1)
+# exit()
+
+ENABLE_TIMER = False
 # extract planes
 extract_res_file = "data/extract_results.pkl"
-draw_extract = True
-if draw_extract is False and os.path.exists(extract_res_file):
+draw_extract = False
+if ENABLE_TIMER is False and draw_extract is False and os.path.exists(extract_res_file):
     with open(extract_res_file, "rb") as f:
         ex_res = pickle.load(f)
     print("Extraction Results Loaded from:", extract_res_file)
@@ -24,7 +39,7 @@ else:
                                              lowest=-1.3, highest=6,
                                              lowthr=2.5, highthr=0.2, totalthr=0.05,
                                              ratiothr=0.4, anglethr=5,
-                                             middle_res=draw_extract, visualize=1)
+                                             middle_res=draw_extract, visualize=3 if ENABLE_TIMER is False else -1)
     with open(extract_res_file, "wb") as f:
         pickle.dump(ex_res, f)
     print("Extraction Results Saved as:", extract_res_file)
@@ -36,6 +51,6 @@ for plane_xyzi in ex_res[:1]:
     plane_projection.handler(xyzi=plane_xyzi,
                              intthr=0.1,
                              hori_angle_resol=hori_angle_resol, vert_angle_resol=vert_angle_resol, pixel_margin=50,
-                             dist_thresh=0.1, visualize=1)
+                             dist_thresh=0.1, visualize=1 if ENABLE_TIMER is False else -1)
 
 print()

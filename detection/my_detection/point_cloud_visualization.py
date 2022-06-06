@@ -2,6 +2,7 @@ import os
 import open3d
 import numpy as np
 from matplotlib import pyplot as plt
+from matplotlib import cm
 
 WINDOW_WIDTH = 1728
 WINDOW_HEIGHT = 972
@@ -106,6 +107,46 @@ def vis_arr_with_color(arr: np.ndarray, colors, title: str = "part of cloud", **
     # open3d.visualization.draw_geometries([pt1], title, width=500, height=500, **kwargs)
 
     load_view_point(pcd=pt1, title=title)
+
+
+def vis_arr_by_intensity_at_viewpoint(arr: np.ndarray, view_file: str = "utils/camera_option.json",
+                                      title: str = "point cloud", **kwargs):
+    # visualize
+    arr_xyz = arr[:, :3]
+    arr_i = arr[:, 3]
+    arr_i *= 256.
+    arr_i /= 255.
+    arr_i *= (1. / .55)
+    arr_i = np.clip(arr_i, 0., 1)
+
+    pcd = open3d.geometry.PointCloud()
+    pcd.points = open3d.utility.Vector3dVector(arr_xyz)
+
+    cmap = cm.get_cmap('jet')
+    colors = cmap(arr_i)
+    pcd_colors = colors[:, :3]  # remove alpha
+    if kwargs.get("intensity_color", True) is True:
+        pcd.colors = open3d.utility.Vector3dVector(pcd_colors)
+    else:
+        pcd.paint_uniform_color([0.16, 0.5, 0.72])
+
+    fig = plt.figure()
+    drawn = plt.scatter(range(arr.shape[0]), arr_i, color=colors)
+    cb = fig.colorbar(drawn)  # , extend='both', shrink=1, label="Temperature", pad=0.01)
+    # plt.colorbar(drawn)  # , ticks=[0, 0.25, 0.5, 0.75, 1])
+    plt.savefig("utils/pt_cloud_color_bar/color-bar-window=%s.png" % title, dpi=200)
+
+    vis = open3d.visualization.Visualizer()
+    vis.create_window(window_name=title, width=1728, height=972)
+    ctr = vis.get_view_control()
+    param = open3d.io.read_pinhole_camera_parameters(view_file)
+    vis.add_geometry(pcd)
+    opt = vis.get_render_option()
+    if kwargs.get("point_size", 10) > 0:
+        opt.point_size = 10
+    ctr.convert_from_pinhole_camera_parameters(param)
+    vis.run()
+    vis.destroy_window()
 
 
 def vis_bin(file: str = "data/seq60_00000.bin"):

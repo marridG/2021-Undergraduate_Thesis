@@ -12,8 +12,8 @@ ALL_SETTING_BOOL_2_TITLE_STR = {True: "使用", False: "不使用"}
 PLOT_DO_DRAW_REDRAW_ALL = False
 PLOT_DO_DRAW = {1: False, 2: False, 3: False, 4: False, 5: False,
                 6: False, 7: False, 8: False, 9: False, 10: False,
-                11: False, 12: False, 13: False, 14: False, 15: False,
-                16: True, 17: True, 18: True, 19: True, 20: True}
+                11: False, 12: False, 13: False, 14: True, 15: False,
+                16: False, 17: True, 18: True, 19: True, 20: True}
 
 ALL_X_TICK_LABELS = np.arange(10, 140 + 10, 10)
 ALL_X_TICKS = np.arange(len(ALL_X_TICK_LABELS))
@@ -138,6 +138,7 @@ if do_draw_this_idx:
                     plt.title(get_setting_str(scale=bool_scale, ratio=bool_ratio, delta=bool_delta, zero=bool_zero),
                               fontsize=SIZE_SUB_TITLE_SUB_FONT)  # sub-title
                     fig.suptitle("指示牌不同距离下遍历法解码正确率", fontsize=SIZE_TITLE_FONT)  # title
+                    fig.subplots_adjust(left=0.093, bottom=0.083, right=0.983)
                     # plt.show()
                     fn = PATH + "[%d] %d%d-%d%d_三种指示牌_正确率.png" % \
                          (PLOT_GROUP_IDX, int(bool_scale), int(bool_ratio), int(bool_delta), int(bool_zero))
@@ -198,6 +199,7 @@ if do_draw_this_idx:
                           fontsize=SIZE_SUB_TITLE_SUB_FONT)  # sub-title
                 fig.suptitle("行首起始零信息对指示牌遍历法解码正确率的影响", fontsize=SIZE_TITLE_FONT)  # title
                 fig.subplots_adjust(top=0.85)
+                fig.subplots_adjust(left=0.093, bottom=0.083, right=0.983)
                 # plt.show()
                 fn = PATH + "[%d] %d%d-%d#_三种指示牌_行首零_正确率差值.png" % \
                      (PLOT_GROUP_IDX, int(bool_scale), int(bool_ratio), int(bool_delta))
@@ -259,6 +261,7 @@ if do_draw_this_idx:
                           fontsize=SIZE_SUB_TITLE_SUB_FONT)  # sub-title
                 fig.suptitle("相邻位采样点数差信息对指示牌遍历法解码正确率的影响", fontsize=SIZE_TITLE_FONT)  # title
                 fig.subplots_adjust(top=0.85)
+                fig.subplots_adjust(left=0.093, bottom=0.083, right=0.983)
                 # plt.show()
                 fn = PATH + "[%d] %d%d-#%d_三种指示牌_数量差_正确率差值.png" % \
                      (PLOT_GROUP_IDX, int(bool_scale), int(bool_ratio), int(bool_zero))
@@ -321,6 +324,7 @@ if do_draw_this_idx:
                           fontsize=SIZE_SUB_TITLE_SUB_FONT)  # sub-title
                 fig.suptitle("理想级间高度比对指示牌遍历法解码正确率的影响", fontsize=SIZE_TITLE_FONT)  # title
                 fig.subplots_adjust(top=0.85)
+                fig.subplots_adjust(left=0.093, bottom=0.083, right=0.983)
                 # plt.show()
                 fn = PATH + "[%d] #%d-%d%d_三种指示牌_高度比_正确率差值.png" % \
                      (PLOT_GROUP_IDX, int(bool_ratio), int(bool_delta), int(bool_zero))
@@ -383,6 +387,7 @@ if do_draw_this_idx:
                           fontsize=SIZE_SUB_TITLE_SUB_FONT)  # sub-title
                 fig.suptitle("理想位高宽比对指示牌遍历法解码正确率的影响", fontsize=SIZE_TITLE_FONT)  # title
                 fig.subplots_adjust(top=0.85)
+                fig.subplots_adjust(left=0.093, bottom=0.083, right=0.983)
                 # plt.show()
                 fn = PATH + "[%d] %d#-%d%d_三种指示牌_高宽比_正确率差值.png" % \
                      (PLOT_GROUP_IDX, int(bool_scale), int(bool_delta), int(bool_zero))
@@ -417,6 +422,7 @@ if do_draw_this_idx:
             plt.title(get_setting_str(scale=bool_scale, ratio=bool_ratio, delta=None, zero=None),
                       fontsize=SIZE_SUB_TITLE_SUB_FONT)  # sub-title
             fig.suptitle("指示牌不同距离下回溯法解码正确率", fontsize=SIZE_TITLE_FONT)  # title
+            fig.subplots_adjust(left=0.093, bottom=0.083, right=0.983)
             # plt.show()
             fn = PATH + "[%d] %d%d-#_三种指示牌_正确率.png" % (PLOT_GROUP_IDX, int(bool_scale), int(bool_ratio))
             plt.savefig(fn, dpi=200)
@@ -472,6 +478,7 @@ if do_draw_this_idx:
                   fontsize=SIZE_SUB_TITLE_SUB_FONT)  # sub-title
         fig.suptitle("理想级间高度比对指示牌回溯法解码正确率的影响", fontsize=SIZE_TITLE_FONT)  # title
         fig.subplots_adjust(top=0.85)
+        fig.subplots_adjust(left=0.093, bottom=0.083, right=0.983)
         # plt.show()
         fn = PATH + "[%d] #%d-#_三种指示牌_高度比_正确率差值.png" % (PLOT_GROUP_IDX, int(bool_ratio))
         plt.savefig(fn, dpi=200)
@@ -527,6 +534,7 @@ if do_draw_this_idx:
                   fontsize=SIZE_SUB_TITLE_SUB_FONT)  # sub-title
         fig.suptitle("理想位高宽比对指示牌回溯法解码正确率的影响", fontsize=SIZE_TITLE_FONT)  # title
         fig.subplots_adjust(top=0.85)
+        fig.subplots_adjust(left=0.093, bottom=0.083, right=0.983)
         # plt.show()
         fn = PATH + "[%d] %d#-#_三种指示牌_高宽比_正确率差值.png" % (PLOT_GROUP_IDX, int(bool_scale))
         plt.savefig(fn, dpi=200)
@@ -605,6 +613,7 @@ if do_draw_this_idx:
                         fig.suptitle("%s指示牌不同距离下遍历法解码正确率,语义剪枝筛选率,可能合并率" % shape)  # title
                         fig.legend(loc="upper right", bbox_to_anchor=(1, 1), bbox_transform=ax.transAxes)
                         fig.subplots_adjust(top=0.85)
+                        fig.subplots_adjust(left=0.093, bottom=0.083, right=0.92)
                         # plt.show()
                         fn = PATH + "[%d] %s-%d%d-%d%d_正确率+模块筛选率.png" % \
                              (PLOT_GROUP_IDX, shape, int(bool_scale), int(bool_ratio), int(bool_delta), int(bool_zero))
@@ -659,6 +668,7 @@ if do_draw_this_idx:
                 plt.title(get_setting_str(scale=bool_scale, ratio=bool_ratio, delta=None, zero=None),
                           fontsize=SIZE_SUB_TITLE_SUB_FONT)  # sub-title
                 fig.suptitle("%s指示牌不同距离下不同信息组合遍历法解码大类信息正确率" % shape)  # title
+                fig.subplots_adjust(left=0.093, bottom=0.083, right=0.983)
                 # fig.subplots_adjust(top=0.85)
                 # plt.show()
                 # exit()
@@ -715,6 +725,7 @@ if do_draw_this_idx:
                 plt.title(get_setting_str(scale=bool_scale, ratio=bool_ratio, delta=None, zero=None),
                           fontsize=SIZE_SUB_TITLE_SUB_FONT)  # sub-title
                 fig.suptitle("%s指示牌不同距离下不同信息组合遍历法解码全部信息正确率" % shape)  # title
+                fig.subplots_adjust(left=0.093, bottom=0.083, right=0.983)
                 # fig.subplots_adjust(top=0.85)
                 # plt.show()
                 # exit()
@@ -771,6 +782,7 @@ if do_draw_this_idx:
                 plt.title(get_setting_str(scale=None, ratio=None, delta=bool_delta, zero=bool_zero),
                           fontsize=SIZE_SUB_TITLE_SUB_FONT)  # sub-title
                 fig.suptitle("%s指示牌不同距离下不同比例组合遍历法解码大类信息正确率" % shape)  # title
+                fig.subplots_adjust(left=0.093, bottom=0.083, right=0.983)
                 # fig.subplots_adjust(top=0.85)
                 # plt.show()
                 # exit()
@@ -826,6 +838,7 @@ if do_draw_this_idx:
                 plt.title(get_setting_str(scale=None, ratio=None, delta=bool_delta, zero=bool_zero),
                           fontsize=SIZE_SUB_TITLE_SUB_FONT)  # sub-title
                 fig.suptitle("%s指示牌不同距离下不同信息组合遍历法解码全部信息正确率" % shape)  # title
+                fig.subplots_adjust(left=0.093, bottom=0.083, right=0.983)
                 # fig.subplots_adjust(top=0.85)
                 # plt.show()
                 # exit()
@@ -902,12 +915,97 @@ if do_draw_this_idx:
                 fig.suptitle("%s指示牌不同距离下回溯法解码正确率,语义剪枝筛选率,可能合并率" % shape)  # title
                 fig.legend(loc="upper right", bbox_to_anchor=(1, 1), bbox_transform=ax.transAxes)
                 fig.subplots_adjust(top=0.85)
+                fig.subplots_adjust(left=0.093, bottom=0.083, right=0.92)
                 # plt.show()
                 fn = PATH + "[%d] %s-%d%d-#_正确率+模块筛选率.png" % \
                      (PLOT_GROUP_IDX, shape, int(bool_scale), int(bool_ratio))
                 plt.savefig(fn, dpi=200)
                 plt.close()
                 print("SAVED:", fn)
+
+"""
+# === #14 === 【ver3】每种指示牌 不同距离下 正确率（一级/一级&二级）+筛选率 (all ### comb)
+PLOT_GROUP_IDX += 1
+do_draw_this_idx = PLOT_DO_DRAW_REDRAW_ALL is True or PLOT_DO_DRAW[PLOT_GROUP_IDX] is True
+print("===== IDX=%d: %s =====" % (PLOT_GROUP_IDX, "DO DRAW" if do_draw_this_idx is True else "SKIPPED"))
+if do_draw_this_idx:
+    colors = cm.get_cmap("rainbow")(np.linspace(0, 1, 3))
+    # ax_tree_color, ax_tol_color = "grey", "green"
+    ax_tree_color, ax_tol_color, c = colors
+    for bool_scale in [True]:  # ALL_SETTING_BOOL:
+        for bool_ratio in [True]:  # ALL_SETTING_BOOL:
+            for shape in ["圆形"]:  # ALL_SHAPES:
+                # plt.clf()
+                fig, ax = plt.subplots()
+                ax_tree = ax.twinx()
+                ax_tol = ax.twinx()
+                # acc lines and points
+                data_all = df_v3.loc[(df_v3["形状"] == shape)
+                                     & (df_v3["双行"] == ALL_SETTING_BOOL_2_VAL_STR[bool_scale])
+                                     & (df_v3["比例"] == ALL_SETTING_BOOL_2_VAL_STR[bool_ratio])]
+                data = data_all[["1正确率", "2正确率"]]
+                data = data.values  # <np.ndarray> of shape (cnt_group, 2)
+
+                labels = ["大类信息正确率", "全部信息正确率"]
+                line_styles = ["-", "--"]
+                for _d, _l, _ls in zip(data.T, labels, line_styles):
+                    ax.plot(_d, label=_l, linestyle=_ls, color=c, linewidth=SIZE_LINE)
+                    ax.scatter(ALL_X_TICKS, _d, color=c, s=SIZE_SCATTER)
+                    # print(_d)
+                ax.set_xlabel("距离 / m", fontsize=13)
+                ax.set_xticks(ALL_X_TICKS), ax.set_xticklabels(ALL_X_TICK_LABELS)
+                ax.set_ylabel("比率", fontsize=13)
+                ax.set_yticks(ALL_Y_TICKS), ax.set_yticklabels(ALL_Y_TICK_LABELS)
+                ax.set_xlim(ALL_X_TICKS[0], ALL_X_TICKS[-1])
+                ax.set_ylim(ALL_Y_TICKS[0], ALL_Y_TICKS[-1])
+
+                # filter ratio bars
+                # tree
+                data = data_all["语义筛选"]
+                data = data.values  # <np.ndarray> of shape (1, 2)
+                ax_tree.bar(ALL_X_TICKS, height=data, width=ALL_X_TICKS[-1] - ALL_X_TICKS[-2],
+                            label="语义剪枝模块筛选率", bottom=0, color=ax_tree_color, alpha=0.2)
+                ax_tree.set_ylabel("语义剪枝筛选率", loc="bottom", color=ax_tree_color, fontsize=13)
+                ax_tree_step = 0.1
+                ax_tree_lim = (0, get_lim(np.max(data), step=ax_tree_step))
+                ax_tree.set_yticks(np.arange(ax_tree_lim[0], ax_tree_lim[1] + ax_tree_step, ax_tree_step))
+                ax_tree.set_yticklabels(get_percentage_y_ticks(lim=ax_tree_lim, step=ax_tree_step),
+                                        color=ax_tree_color)
+                ax_tree.set_ylim(ax_tree_lim[0], ax_tree_lim[1] * 2 + ax_tree_step * 2)
+                # combine
+                data = data_all["合并筛选"]
+                data = data.values  # <np.ndarray> of shape (1, 2)
+                ax_tol.bar(ALL_X_TICKS, height=-1 * data, width=ALL_X_TICKS[-1] - ALL_X_TICKS[-2],
+                           label="可能合并模块合并率", bottom=0, color=ax_tol_color, alpha=0.2)
+                ax_tol.set_ylabel("合并率", loc="top", color=ax_tol_color, fontsize=13)
+                ax_tol_step = 0.1
+                ax_tol_lim = (-1 * get_lim(np.max(data), step=ax_tol_step), 0)
+                ax_tol.set_yticks(np.arange(ax_tol_lim[0], ax_tol_lim[1] + ax_tol_step, ax_tol_step))
+                ax_tol.set_yticklabels([i[1:] if "-" == i[0] else i
+                                        for i in get_percentage_y_ticks(lim=ax_tol_lim, step=ax_tol_step)],
+                                       color=ax_tol_color)
+                ax_tol.set_ylim(ax_tol_lim[0] * 2 - ax_tol_step * 2, ax_tol_lim[1])
+
+                # plt.title(get_setting_str(scale=bool_scale, ratio=bool_ratio, delta=None, zero=None,
+                #                           # lines=["模块筛选率(合并率) = 1 - 进入模块数/离开模块数, 除数为零结果按 0 计"]
+                #                           ),
+                #           fontsize=SIZE_SUB_TITLE_SUB_FONT)  # sub-title
+                # fig.suptitle("%s指示牌不同距离下回溯法解码正确率,语义剪枝筛选率,可能合并率" % shape)  # title
+                # fig.legend(loc="upper right", bbox_to_anchor=(1, 1), bbox_transform=ax.transAxes)
+                fig.legend(loc="lower right", bbox_to_anchor=(0.85, 0.1), bbox_transform=ax.transAxes,
+                           prop={"size": 10})
+                # fig.subplots_adjust(top=0.85)
+                # fig.subplots_adjust(left=0.093, bottom=0.083, right=0.92)
+                fig.subplots_adjust(top=0.95, left=0.1, bottom=0.1, right=0.9)
+                # plt.show()
+                # fn = PATH + "[%d] %s-%d%d-#_正确率+模块筛选率.png" % \
+                #      (PLOT_GROUP_IDX, shape, int(bool_scale), int(bool_ratio))
+                # plt.savefig(fn, dpi=200)
+                fn = r"C:\Users\John\Downloads\1.png"
+                plt.savefig(fn, dpi=500)
+                plt.close()
+                print("SAVED:", fn)
+"""  # no titles + larger labels version, for circle-11X only
 
 # === #15 === 【ver3】每种指示牌 不同距离下 【两个比例的四个组合】 正确率（一级） (11#-10#-01#-00#)
 PLOT_GROUP_IDX += 1
@@ -952,6 +1050,7 @@ if do_draw_this_idx:
         plt.title(get_setting_str(scale=None, ratio=None, delta=None, zero=None),
                   fontsize=SIZE_SUB_TITLE_SUB_FONT)  # sub-title
         fig.suptitle("%s指示牌不同距离下不同比例组合回溯法解码大类信息正确率" % shape)  # title
+        fig.subplots_adjust(left=0.093, bottom=0.083, right=0.983)
         # fig.subplots_adjust(top=0.85)
         # plt.show()
         # exit()
@@ -967,52 +1066,49 @@ print("===== IDX=%d: %s =====" % (PLOT_GROUP_IDX, "DO DRAW" if do_draw_this_idx 
 if do_draw_this_idx:
     colors = cm.get_cmap("rainbow")(np.linspace(0, 1, 4))
     for shape in ALL_SHAPES:
-        for bool_delta in ALL_SETTING_BOOL:
-            for bool_zero in ALL_SETTING_BOOL:
-                _color_idx = 4
-                # plt.clf()
-                fig, ax = plt.subplots()
-                data_all = df_v3.loc[(df_v3["形状"] == shape)
-                                     & (df_v3["数量差"] == ALL_SETTING_BOOL_2_VAL_STR[bool_delta])
-                                     & (df_v3["行首零"] == ALL_SETTING_BOOL_2_VAL_STR[bool_zero])]
-                y_tick_step = 0.05
-                y_min = 99
-                for bool_scale in ALL_SETTING_BOOL:
-                    for bool_ratio in ALL_SETTING_BOOL:
-                        _color_idx -= 1
-                        data = data_all.loc[(df_v3["双行"] == ALL_SETTING_BOOL_2_VAL_STR[bool_scale])
-                                            & (df_v3["比例"] == ALL_SETTING_BOOL_2_VAL_STR[bool_ratio])]
-                        data = data[["2正确率"]]
-                        data = data.values  # <np.ndarray> of shape (cnt_group, 2)
+        _color_idx = 4
+        # plt.clf()
+        fig, ax = plt.subplots()
+        data_all = df_v3.loc[(df_v3["形状"] == shape)]
+        y_tick_step = 0.05
+        y_min = 99
+        for bool_scale in ALL_SETTING_BOOL:
+            for bool_ratio in ALL_SETTING_BOOL:
+                _color_idx -= 1
+                data = data_all.loc[(df_v3["双行"] == ALL_SETTING_BOOL_2_VAL_STR[bool_scale])
+                                    & (df_v3["比例"] == ALL_SETTING_BOOL_2_VAL_STR[bool_ratio])]
+                data = data[["2正确率"]]
+                data = data.values  # <np.ndarray> of shape (cnt_group, 2)
 
-                        y_min = min(y_min, get_lim(np.min(data), y_tick_step) - y_tick_step)
+                y_min = min(y_min, get_lim(np.min(data), y_tick_step) - y_tick_step)
 
-                        is_11 = bool_scale is True and bool_ratio is True
-                        labels = [
-                            get_setting_str(scale=bool_scale, ratio=bool_ratio, delta=None, zero=None, pure=True), ]
-                        line_styles = ["--", ]
-                        for _d, _l, _ls in zip(data.T, labels, line_styles):
-                            ax.plot(_d, label=_l, linestyle=_ls if is_11 is False else "-",
-                                    color=colors[_color_idx],
-                                    linewidth=SIZE_LINE if is_11 is False else SIZE_LINE + 2)
-                            ax.scatter(ALL_X_TICKS, _d, color=colors[_color_idx], s=SIZE_SCATTER)
-                            # print(_d, y_min)
+                is_11 = bool_scale is True and bool_ratio is True
+                labels = [
+                    get_setting_str(scale=bool_scale, ratio=bool_ratio, delta=None, zero=None, pure=True), ]
+                line_styles = ["--", ]
+                for _d, _l, _ls in zip(data.T, labels, line_styles):
+                    ax.plot(_d, label=_l, linestyle=_ls if is_11 is False else "-",
+                            color=colors[_color_idx],
+                            linewidth=SIZE_LINE if is_11 is False else SIZE_LINE + 2)
+                    ax.scatter(ALL_X_TICKS, _d, color=colors[_color_idx], s=SIZE_SCATTER)
+                    # print(_d, y_min)
 
-                set_plt_info(ax)
-                ax_ylim = (max(0, min(0.65, y_min)), 1)
-                ax.set_yticks(np.arange(ax_ylim[0], ax_ylim[1] + y_tick_step, y_tick_step))
-                ax.set_yticklabels(get_percentage_y_ticks(ax_ylim, y_tick_step), fontsize=SIZE_AXIS_TICK_FONT)
-                ax.set_ylim(ax_ylim[0], ax_ylim[1])
+        set_plt_info(ax)
+        ax_ylim = (max(0, min(0.65, y_min)), 1)
+        ax.set_yticks(np.arange(ax_ylim[0], ax_ylim[1] + y_tick_step, y_tick_step))
+        ax.set_yticklabels(get_percentage_y_ticks(ax_ylim, y_tick_step), fontsize=SIZE_AXIS_TICK_FONT)
+        ax.set_ylim(ax_ylim[0], ax_ylim[1])
 
-                plt.title(get_setting_str(scale=None, ratio=None, delta=bool_delta, zero=bool_zero),
-                          fontsize=SIZE_SUB_TITLE_SUB_FONT)  # sub-title
-                fig.suptitle("%s指示牌不同距离下不同信息组合遍历法解码全部信息正确率" % shape)  # title
-                # fig.subplots_adjust(top=0.85)
-                # plt.show()
-                # exit()
-                fn = PATH + "[%d] %s-##-%d%d_全部正确率.png" % (PLOT_GROUP_IDX, shape, int(bool_delta), int(bool_zero))
-                plt.savefig(fn, dpi=200)
-                plt.close()
-                print("SAVED:", fn)
+        plt.title(get_setting_str(scale=None, ratio=None, delta=None, zero=None),
+                  fontsize=SIZE_SUB_TITLE_SUB_FONT)  # sub-title
+        fig.suptitle("%s指示牌不同距离下不同比例组合回溯法解码全部信息正确率" % shape)  # title
+        fig.subplots_adjust(left=0.093, bottom=0.083, right=0.983)
+        # fig.subplots_adjust(top=0.85)
+        # plt.show()
+        # exit()
+        fn = PATH + "[%d] %s-##-#_全部正确率.png" % (PLOT_GROUP_IDX, shape)
+        plt.savefig(fn, dpi=200)
+        plt.close()
+        print("SAVED:", fn)
 
 print()
