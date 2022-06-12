@@ -220,7 +220,7 @@ def do(setting_env_key, setting_dec_key):
     print()
     toc1 = time.perf_counter()
     excel_str = []
-    for dist in range(10, 140 + 10, 10):  # [10, 40]:  # range(10, 140 + 10, 10):
+    for dist in [40]:  # range(10, 140 + 10, 10):  # [10, 40]:  # range(10, 140 + 10, 10):
         if 10 == dist:
             v_step = 1
         elif 20 == dist:
