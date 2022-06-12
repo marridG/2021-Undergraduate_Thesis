@@ -20,7 +20,7 @@ sign_board_obj.draw_sign_board(shape="rectangle", rect_height=1200, rect_width=1
 
 sign_board_obj.place_encoding(encoding=data_sample_raw_bar)
 # sign_board_obj.render().show()
-sign_board_obj.render().savefig("./canvas_v1_1.png")
+sign_board_obj.render().savefig("./canvas_img/canvas_v1_1.png")
 
 # sample points on the canvas
 pt_sample_obj = LiDARSampling(canvas=sign_board_obj, vert_angle_resol=0.33, hori_angle_resol=0.1)

@@ -122,7 +122,7 @@ def do(setting_env_key, setting_dec_key):
 
     sign_board_obj.place_encoding(encoding=data_sample_raw_bar, orientation=setting_env["encoding"]["orientation"])
     # sign_board_obj.render().show()
-    sign_board_obj.render().savefig("./canvas_v2_1__%s.png" % setting_env_key)
+    sign_board_obj.render().savefig("./canvas_img/canvas_v2_1__%s.png" % setting_env_key)
 
     def sample_n_decode(distance, vert_step, hori_step):
         # vert_step, hori_step = 20, 1

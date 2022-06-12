@@ -96,7 +96,7 @@ sign_board_obj.draw_sign_board(shape=setting_env["board"]["shape"], **setting_en
 
 sign_board_obj.place_encoding(encoding=data_sample_raw_bar, orientation=setting_env["encoding"]["orientation"])
 # sign_board_obj.render().show()
-sign_board_obj.render().savefig("./canvas_v2_1__%s.png" % setting_env_key)
+sign_board_obj.render().savefig("./canvas_img/canvas_v2_1__%s.png" % setting_env_key)
 
 # sample points on the canvas
 distance = 20  # meters

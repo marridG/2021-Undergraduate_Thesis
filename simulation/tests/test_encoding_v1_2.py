@@ -26,7 +26,7 @@ sign_board_obj.draw_sign_board(shape="rectangle", rect_height=1200, rect_width=1
 
 sign_board_obj.place_encoding(encoding=data_sample_raw_bar)
 # sign_board_obj.render().show()
-sign_board_obj.render().savefig("./canvas_v1_2.png")
+sign_board_obj.render().savefig("./canvas_img/canvas_v1_2.png")
 
 # sample points on the canvas
 distance = 50  # meters
