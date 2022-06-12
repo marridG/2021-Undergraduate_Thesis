@@ -51,6 +51,7 @@ ALL_SIGNS_BY_CATEGORY = {  # cnt = 198 (67+102+29)
 CNT_SIGNS = 198
 CNT_CATEGORY_1 = len(ALL_SIGNS_BY_CATEGORY.keys())
 CNT_CATEGORY_2 = max(len(_cat_1_items) for _cat_1_items in ALL_SIGNS_BY_CATEGORY.values())
+CNT_CATEGORY_2_BY_CAT = {_cat: len(_cat_signs) for _cat, _cat_signs in ALL_SIGNS_BY_CATEGORY.items()}
 
 if "__main__" == __name__:
     pass
