@@ -30,20 +30,20 @@ class MaxDistCal:
         res = min(x_by_width, x_by_height)
         res_width = res
         res_height = res * bar_hw_ratio
-        return res_height, res_width
+        return res_height, res_width  # unit-free-alike, unit depends on that of `self.SIZE_RECT`
 
     def _cal_cir_bar_hw(self, bar_hw_ratio: float) -> (float, float):
         res = self.SIZE_CIR / np.sqrt(self.ENC_BAR_CNT_COL * self.ENC_BAR_CNT_COL
                                       + self.ENC_BAR_CNT_ROW * self.ENC_BAR_CNT_ROW * bar_hw_ratio * bar_hw_ratio)
         res_width = res
         res_height = res * bar_hw_ratio
-        return res_height, res_width
+        return res_height, res_width  # unit-free-alike, unit depends on that of `self.SIZE_CIR`
 
     def _cal_tri_bar_hw(self, bar_hw_ratio: float) -> (float, float):
         res = self.SIZE_TRI / (self.ENC_BAR_CNT_COL + 2. * self.ENC_BAR_CNT_ROW * bar_hw_ratio / np.sqrt(3))
         res_width = res
         res_height = res * bar_hw_ratio
-        return res_height, res_width
+        return res_height, res_width  # unit-free-alike, unit depends on that of `self.SIZE_TRI`
 
     def cal_bar_hw(self, bar_hw_ratio: float, shape: str) -> (float, float):
         assert shape in ["r", "rect", "rectangle",
@@ -62,12 +62,12 @@ class MaxDistCal:
         return res
 
     def _cal_hori_dist_by_width(self, width: float) -> float:
-        """unit-free => unit-free"""
+        """unit-free-alike => unit-free-alike, unit depends on that of `width`"""
         res = width / np.tan(self.RESOL_HORI / 180. * np.pi)
         return res
 
     def _cal_vert_dist_by_height(self, height: float) -> float:
-        """unit-free => unit-free"""
+        """unit-free-alike => unit-free-alike, unit depends on that of `width`"""
         res = height / np.tan(self.RESOL_VERT / 180. * np.pi)
         return res
 
