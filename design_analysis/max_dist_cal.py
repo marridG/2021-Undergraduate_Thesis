@@ -13,9 +13,16 @@ class MaxDistCal:
 
     ALL_SHAPE_STR = ["rectangle", "circle", "triangle"]
 
-    def __init__(self, enc_bar_cnt_row: int, enc_bar_cnt_col: int):
+    def __init__(self, enc_bar_cnt_row: int, enc_bar_cnt_col: int, **kwargs):
         self.ENC_BAR_CNT_ROW = enc_bar_cnt_row
         self.ENC_BAR_CNT_COL = enc_bar_cnt_col
+
+        if isinstance(kwargs.get("size_rect"), int) is True:
+            self.SIZE_RECT = kwargs["size_rect"]
+        if isinstance(kwargs.get("size_cir"), int) is True:
+            self.SIZE_CIR = kwargs["size_cir"]
+        if isinstance(kwargs.get("size_tri"), int) is True:
+            self.SIZE_TRI = kwargs["size_tri"]
 
     def _cal_rect_bar_hw(self, bar_hw_ratio: float) -> (float, float):
         x_by_width = self.SIZE_RECT * 1. / self.ENC_BAR_CNT_COL
@@ -38,7 +45,7 @@ class MaxDistCal:
         res_height = res * bar_hw_ratio
         return res_height, res_width
 
-    def _cal_bar_hw(self, bar_hw_ratio: float, shape: str) -> (float, float):
+    def cal_bar_hw(self, bar_hw_ratio: float, shape: str) -> (float, float):
         assert shape in ["r", "rect", "rectangle",
                          "c", "cir", "circle",
                          "t", "tri", "triangle"], "Unknown Shape \"%s\"" % shape
@@ -97,7 +104,7 @@ class MaxDistCal:
         res = {}
         for shape in ["rectangle", "circle", "triangle"]:
             res[shape] = {}
-            bar_height, bar_width = self._cal_bar_hw(bar_hw_ratio=bar_hw_ratio, shape=shape)
+            bar_height, bar_width = self.cal_bar_hw(bar_hw_ratio=bar_hw_ratio, shape=shape)
             # level 1 info
             dist_lv1_hori = self._cal_hori_dist_by_width(width=bar_width * lv1_max_width_by_bar_cnt) / 1000.  # m
             dist_lv1_vert = self._cal_vert_dist_by_height(height=bar_height * lv1_max_height_by_bar_cnt) / 1000.  # m
@@ -194,33 +201,49 @@ if "__main__" == __name__:
     print()
     """  # for migration test
 
-    # === find optimal ratio == =
-    # 2*2, 2 per bar => 6.6
-    obj = MaxDistCal(enc_bar_cnt_col=8, enc_bar_cnt_row=2)
-    obj.find_opt_hw_ratio(lv1_pt_cnt_vert=2, lv1_pt_cnt_hori=4, lv2_pt_cnt_vert=2, lv2_pt_cnt_hori=16,
-                          empirical_ratio=6.6)
-    # 2*4, 2 per bar => ~3.3
-    obj = MaxDistCal(enc_bar_cnt_col=8, enc_bar_cnt_row=2)
-    obj.find_opt_hw_ratio(lv1_pt_cnt_vert=2, lv1_pt_cnt_hori=8, lv2_pt_cnt_vert=2, lv2_pt_cnt_hori=16,
-                          empirical_ratio=3.3)
-    # 2*5, 1 per bar => 6.6
-    obj = MaxDistCal(enc_bar_cnt_col=10, enc_bar_cnt_row=2)
-    obj.find_opt_hw_ratio(lv1_pt_cnt_vert=2, lv1_pt_cnt_hori=5, lv2_pt_cnt_vert=2, lv2_pt_cnt_hori=10,
-                          empirical_ratio=6.6)
+    # # === find optimal ratio == =
+    # # 2*2, 2 per bar => 6.6
+    # obj = MaxDistCal(enc_bar_cnt_col=8, enc_bar_cnt_row=2)
+    # obj.find_opt_hw_ratio(lv1_pt_cnt_vert=2, lv1_pt_cnt_hori=4, lv2_pt_cnt_vert=2, lv2_pt_cnt_hori=16,
+    #                       empirical_ratio=6.6)
+    # # 2*4, 2 per bar => ~3.3
+    # obj = MaxDistCal(enc_bar_cnt_col=8, enc_bar_cnt_row=2)
+    # obj.find_opt_hw_ratio(lv1_pt_cnt_vert=2, lv1_pt_cnt_hori=8, lv2_pt_cnt_vert=2, lv2_pt_cnt_hori=16,
+    #                       empirical_ratio=3.3)
+    # # 2*5, 1 per bar => 6.6
+    # obj = MaxDistCal(enc_bar_cnt_col=10, enc_bar_cnt_row=2)
+    # obj.find_opt_hw_ratio(lv1_pt_cnt_vert=2, lv1_pt_cnt_hori=5, lv2_pt_cnt_vert=2, lv2_pt_cnt_hori=10,
+    #                       empirical_ratio=6.6)
 
-    # === calculate maximum distance for the optimal ratio ===
-    # 2*2, 2 per bar
-    obj = MaxDistCal(enc_bar_cnt_col=8, enc_bar_cnt_row=2)
-    _ = obj.cal_dist(bar_hw_ratio=6.6,
-                     lv1_pt_cnt_vert=2, lv1_pt_cnt_hori=4, lv2_pt_cnt_vert=2, lv2_pt_cnt_hori=16, print_res=True)
-    print()
-    # 2*4, 2 per bar
-    obj = MaxDistCal(enc_bar_cnt_col=8, enc_bar_cnt_row=2)
-    _ = obj.cal_dist(bar_hw_ratio=3.3,
-                     lv1_pt_cnt_vert=2, lv1_pt_cnt_hori=8, lv2_pt_cnt_vert=2, lv2_pt_cnt_hori=16, print_res=True)
-    print()
-    # 2*5, 1 per bar
-    obj = MaxDistCal(enc_bar_cnt_col=10, enc_bar_cnt_row=2)
-    _ = obj.cal_dist(bar_hw_ratio=6.6,
-                     lv1_pt_cnt_vert=2, lv1_pt_cnt_hori=5, lv2_pt_cnt_vert=2, lv2_pt_cnt_hori=10, print_res=True)
-    print()
+    # # === calculate maximum distance for the optimal ratio ===
+    # # 2*2, 2 per bar
+    # obj = MaxDistCal(enc_bar_cnt_col=8, enc_bar_cnt_row=2)
+    # _ = obj.cal_dist(bar_hw_ratio=6.6,
+    #                  lv1_pt_cnt_vert=2, lv1_pt_cnt_hori=4, lv2_pt_cnt_vert=2, lv2_pt_cnt_hori=16, print_res=True)
+    # print()
+    # # 2*4, 2 per bar
+    # obj = MaxDistCal(enc_bar_cnt_col=8, enc_bar_cnt_row=2)
+    # _ = obj.cal_dist(bar_hw_ratio=3.3,
+    #                  lv1_pt_cnt_vert=2, lv1_pt_cnt_hori=8, lv2_pt_cnt_vert=2, lv2_pt_cnt_hori=16, print_res=True)
+    # print()
+    # # 2*5, 1 per bar
+    # obj = MaxDistCal(enc_bar_cnt_col=10, enc_bar_cnt_row=2)
+    # _ = obj.cal_dist(bar_hw_ratio=6.6,
+    #                  lv1_pt_cnt_vert=2, lv1_pt_cnt_hori=5, lv2_pt_cnt_vert=2, lv2_pt_cnt_hori=10, print_res=True)
+    # print()
+
+    # === calculate bar size ===
+    # # 2*2, 2 per bar
+    # obj = MaxDistCal(enc_bar_cnt_col=8, enc_bar_cnt_row=2, size_cir=550)  # size_cir=1150)
+    # h, w = obj.cal_bar_hw(bar_hw_ratio=6.6, shape="cir")
+    # print("%.4f\t%.4f\t%.4f\t%.4f" % (h / 10., w / 10., 2. * h / 10., 8. * w / 10.))
+    # d = obj.cal_dist(bar_hw_ratio=6.6, lv1_pt_cnt_vert=2, lv1_pt_cnt_hori=4, lv2_pt_cnt_vert=2, lv2_pt_cnt_hori=16)
+    # print("%.4f\t%.4f" % (d["circle"]["lv1"]["dist"], d["circle"]["lv2"]["dist"]))
+    # # 2*2, 2 per bar
+    # obj = MaxDistCal(enc_bar_cnt_col=8, enc_bar_cnt_row=2, size_tri=550)  # size_tri=1150)  # size_tri=1240)
+    # h, w = obj.cal_bar_hw(bar_hw_ratio=6.6, shape="tri")
+    # print("%.4f\t%.4f\t%.4f\t%.4f" % (h, w, 2. * h, 8. * w))
+    # d = obj.cal_dist(bar_hw_ratio=6.6, lv1_pt_cnt_vert=2, lv1_pt_cnt_hori=4, lv2_pt_cnt_vert=2, lv2_pt_cnt_hori=16)
+    # print("%.4f\t%.4f" % (d["triangle"]["lv1"]["dist"], d["triangle"]["lv2"]["dist"]))
+
+    pass
