@@ -71,6 +71,41 @@ class MaxDistCal:
         res = height / np.tan(self.RESOL_VERT / 180. * np.pi)
         return res
 
+    def cal_dist_by_hw(self, bar_height: float, bar_width: float,
+                       lv1_pt_cnt_vert: int, lv1_pt_cnt_hori: int, lv2_pt_cnt_vert: int, lv2_pt_cnt_hori: int) \
+            -> (float, float):
+        """
+        calculate the maximum distance where lv-1 or lv-2 info can be 100% extracted
+        :param bar_height:                  height of the bar (in MILLI-METERs)
+        :param bar_width:                   width of the bar (in MILLI-METERs)
+        :param lv1_pt_cnt_vert:             number of VERTICAL sample points required for lv-1 info
+        :param lv1_pt_cnt_hori:             number of HORIZONTAL sample points required for lv-1 info
+        :param lv2_pt_cnt_vert:             number of VERTICAL sample points required for lv-2 info
+        :param lv2_pt_cnt_hori:             number of HORIZONTAL sample points required for lv-2 info
+        :return:                            maximum distance (in METERs) calculation results: (1) lv1; (2) lv2
+        """
+
+        # assert lv1_pt_cnt_hori <= self.ENC_BAR_CNT_COL and 0 == self.ENC_BAR_CNT_COL % lv1_pt_cnt_hori
+        # assert lv1_pt_cnt_vert <= self.ENC_BAR_CNT_ROW and 0 == self.ENC_BAR_CNT_ROW % lv1_pt_cnt_vert
+        # assert lv2_pt_cnt_hori <= self.ENC_BAR_CNT_COL and 0 == self.ENC_BAR_CNT_COL % lv2_pt_cnt_hori
+        # assert lv2_pt_cnt_vert <= self.ENC_BAR_CNT_ROW and 0 == self.ENC_BAR_CNT_ROW % lv2_pt_cnt_vert
+
+        lv1_max_width_by_bar_cnt = self.ENC_BAR_CNT_COL / lv1_pt_cnt_hori
+        lv1_max_height_by_bar_cnt = self.ENC_BAR_CNT_ROW / lv1_pt_cnt_vert
+        lv2_max_width_by_bar_cnt = self.ENC_BAR_CNT_COL / lv2_pt_cnt_hori
+        lv2_max_height_by_bar_cnt = self.ENC_BAR_CNT_ROW / lv2_pt_cnt_vert
+
+        # level 1 info
+        dist_lv1_hori = self._cal_hori_dist_by_width(width=bar_width * lv1_max_width_by_bar_cnt) / 1000.  # m
+        dist_lv1_vert = self._cal_vert_dist_by_height(height=bar_height * lv1_max_height_by_bar_cnt) / 1000.  # m
+        dist_lv1 = min(dist_lv1_hori, dist_lv1_vert)
+        # lv2 info
+        dist_lv2_hori = self._cal_hori_dist_by_width(width=bar_width * lv2_max_width_by_bar_cnt) / 1000.  # m
+        dist_lv2_vert = self._cal_vert_dist_by_height(height=bar_height * lv2_max_height_by_bar_cnt) / 1000.  # m
+        dist_lv2 = min(dist_lv2_hori, dist_lv2_vert)
+
+        return dist_lv1, dist_lv2
+
     def cal_dist(self, bar_hw_ratio: float,
                  lv1_pt_cnt_vert: int, lv1_pt_cnt_hori: int, lv2_pt_cnt_vert: int, lv2_pt_cnt_hori: int,
                  print_res: bool = False) \
@@ -246,4 +281,15 @@ if "__main__" == __name__:
     # d = obj.cal_dist(bar_hw_ratio=6.6, lv1_pt_cnt_vert=2, lv1_pt_cnt_hori=4, lv2_pt_cnt_vert=2, lv2_pt_cnt_hori=16)
     # print("%.4f\t%.4f" % (d["triangle"]["lv1"]["dist"], d["triangle"]["lv2"]["dist"]))
 
-    pass
+    # === calculate maximum distance for given abr height and width ===
+    # 2*2, 2 per bar
+    obj = MaxDistCal(enc_bar_cnt_col=8, enc_bar_cnt_row=2)
+    all_settings = [(350, 55), (350, 50), (350, 55),
+                    (330, 45), (330, 50), (330, 50), (320, 50), (325, 50),
+                    (150, 25), (160, 25),
+                    (490, 75), (500, 70), (490, 70), (500, 75),
+                    (230, 35), (230, 35), (240, 35), (240, 40), ]
+    for _h, _w in all_settings:
+        _d1, _d2 = obj.cal_dist_by_hw(bar_height=_h, bar_width=_w,
+                                      lv1_pt_cnt_vert=2, lv1_pt_cnt_hori=4, lv2_pt_cnt_vert=2, lv2_pt_cnt_hori=16)
+        print("%.1f\t%.1f" % (_d1, _d2))
