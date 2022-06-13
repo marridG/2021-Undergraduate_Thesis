@@ -13,7 +13,7 @@ class MaxDistCal:
 
     ALL_SHAPE_STR = ["rectangle", "circle", "triangle"]
 
-    def __init__(self, enc_bar_cnt_row: int, enc_bar_cnt_col: int, **kwargs):
+    def __init__(self, enc_bar_cnt_row: int = 2, enc_bar_cnt_col: int = 8, **kwargs):
         self.ENC_BAR_CNT_ROW = enc_bar_cnt_row
         self.ENC_BAR_CNT_COL = enc_bar_cnt_col
 
