@@ -7,6 +7,7 @@ class MaxDistCal:
     SIZE_RECT = 1200  # mm
     SIZE_CIR = 1200  # mm
     SIZE_TRI = 1300  # mm
+    SHAPE_STR_2_SIZE = {"rectangle": SIZE_RECT, "circle": SIZE_CIR, "triangle": SIZE_TRI}
 
     RESOL_HORI = 0.10  # degrees
     RESOL_VERT = 0.33  # degrees
@@ -215,6 +216,57 @@ class MaxDistCal:
 
         return
 
+    def find_tol_opt_hw_ratio(self,
+                              lv1_pt_cnt_vert: int, lv1_pt_cnt_hori: int, lv2_pt_cnt_vert: int, lv2_pt_cnt_hori: int) \
+            -> None:
+        """
+        "find" (by showing plots) the optimal ratio of a bar's height:width, which maximizes the maximum distance
+            where lv-1 or lv-2 info can be 100% extracted
+        :param lv1_pt_cnt_vert:             number of VERTICAL sample points required for lv-1 info
+        :param lv1_pt_cnt_hori:             number of HORIZONTAL sample points required for lv-1 info
+        :param lv2_pt_cnt_vert:             number of VERTICAL sample points required for lv-2 info
+        :param lv2_pt_cnt_hori:             number of HORIZONTAL sample points required for lv-2 info
+        """
+        _RATIO_STEP_SIZE = 0.05
+
+        # calculate all max distance values for all ratios and all shapes
+        all_ratio = np.arange(0 + _RATIO_STEP_SIZE, 10, _RATIO_STEP_SIZE)
+        max_dist_res = {"rectangle": {"lv1": [], "lv2": []},
+                        "circle": {"lv1": [], "lv2": []},
+                        "triangle": {"lv1": [], "lv2": []}}
+        for _ratio in all_ratio:
+            _max_dist = self.cal_dist(bar_hw_ratio=_ratio,
+                                      lv1_pt_cnt_vert=lv1_pt_cnt_vert, lv1_pt_cnt_hori=lv1_pt_cnt_hori,
+                                      lv2_pt_cnt_vert=lv2_pt_cnt_vert, lv2_pt_cnt_hori=lv2_pt_cnt_hori)
+            for __shape, __shape_dist in _max_dist.items():
+                for ___lv, ___lv_dist in __shape_dist.items():
+                    max_dist_res[__shape][___lv].append(___lv_dist["dist"])
+
+        # plot max distance values
+        fig, ax = plt.subplots(nrows=1, ncols=3, figsize=(10, 4))
+        ax = ax.flatten()
+        _subplot_idx = 0
+        _lv_colors = {"lv1": "red", "lv2": "blue"}
+        for _shape, _shape_dist in max_dist_res.items():
+            for __lv, __lv_dist in _shape_dist.items():
+                ax[_subplot_idx].plot(all_ratio, __lv_dist, color=_lv_colors[__lv], label=__lv)
+                # optimal ratio value
+                __opt_ratio = all_ratio[np.argmax(__lv_dist)]
+                __opt_ratio_max_dist = np.max(__lv_dist)
+                ax[_subplot_idx].axvline(x=all_ratio[np.argmax(__lv_dist)], color=_lv_colors[__lv], linestyle=":")
+                ax[_subplot_idx].annotate(text="%.2f\n%.4fm" % (__opt_ratio, __opt_ratio_max_dist),
+                                          xy=(__opt_ratio, 0), color=_lv_colors[__lv])
+                # set subplot title
+                ax[_subplot_idx].set_title("%s (size=%d)" % (_shape, self.SHAPE_STR_2_SIZE[_shape]))
+            _subplot_idx += 1
+        fig.suptitle("Lv1=%d*%d; Lv2=%d*%d" % (lv1_pt_cnt_vert, lv1_pt_cnt_hori, lv2_pt_cnt_vert, lv2_pt_cnt_hori))
+        fig.supxlabel("Height:Width Ratio"), fig.supylabel("Maximum Distance / m")
+        ax[-1].legend(loc="upper right")
+        fig.subplots_adjust(left=0.07, bottom=0.11, right=0.98, top=0.88, wspace=0.15, hspace=0.25)
+        plt.show()
+
+        return
+
 
 if "__main__" == __name__:
     """
@@ -281,15 +333,20 @@ if "__main__" == __name__:
     # d = obj.cal_dist(bar_hw_ratio=6.6, lv1_pt_cnt_vert=2, lv1_pt_cnt_hori=4, lv2_pt_cnt_vert=2, lv2_pt_cnt_hori=16)
     # print("%.4f\t%.4f" % (d["triangle"]["lv1"]["dist"], d["triangle"]["lv2"]["dist"]))
 
-    # === calculate maximum distance for given abr height and width ===
-    # 2*2, 2 per bar
+    # # === calculate maximum distance for given abr height and width ===
+    # # 2*2, 2 per bar
+    # obj = MaxDistCal(enc_bar_cnt_col=8, enc_bar_cnt_row=2)
+    # all_settings = [(350, 55), (350, 50), (350, 55),
+    #                 (330, 45), (330, 50), (330, 50), (320, 50), (325, 50),
+    #                 (150, 25), (160, 25),
+    #                 (490, 75), (500, 70), (490, 70), (500, 75),
+    #                 (230, 35), (230, 35), (240, 35), (240, 40), ]
+    # for _h, _w in all_settings:
+    #     _d1, _d2 = obj.cal_dist_by_hw(bar_height=_h, bar_width=_w,
+    #                                   lv1_pt_cnt_vert=2, lv1_pt_cnt_hori=4, lv2_pt_cnt_vert=2, lv2_pt_cnt_hori=16)
+    #     print("%.1f\t%.1f" % (_d1, _d2))
+
+    # === find tolerated optimal ratio == =
+    # 2*2, 2 per bar => 6.6
     obj = MaxDistCal(enc_bar_cnt_col=8, enc_bar_cnt_row=2)
-    all_settings = [(350, 55), (350, 50), (350, 55),
-                    (330, 45), (330, 50), (330, 50), (320, 50), (325, 50),
-                    (150, 25), (160, 25),
-                    (490, 75), (500, 70), (490, 70), (500, 75),
-                    (230, 35), (230, 35), (240, 35), (240, 40), ]
-    for _h, _w in all_settings:
-        _d1, _d2 = obj.cal_dist_by_hw(bar_height=_h, bar_width=_w,
-                                      lv1_pt_cnt_vert=2, lv1_pt_cnt_hori=4, lv2_pt_cnt_vert=2, lv2_pt_cnt_hori=16)
-        print("%.1f\t%.1f" % (_d1, _d2))
+    obj.find_tol_opt_hw_ratio(lv1_pt_cnt_vert=2, lv1_pt_cnt_hori=4, lv2_pt_cnt_vert=2, lv2_pt_cnt_hori=16)
