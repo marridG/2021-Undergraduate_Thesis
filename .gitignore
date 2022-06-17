@@ -5,7 +5,7 @@
 *.png
 *.txt
 *.npy
-detection/pole-localization-main/kitti
+detection/my_detection/tests
 
 # IntelliJ project files
 .idea
