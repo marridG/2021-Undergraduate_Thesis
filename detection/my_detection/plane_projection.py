@@ -97,9 +97,9 @@ def handler(xyzi, dist_thresh=0.05,
 
     if -1 < visualize <= 1:
         # open3d.visualization.draw_geometries([open3d.geometry.PointCloud(points=open3d.utility.Vector3dVector(xyz))])
-        point_cloud_visualization.vis_arr_by_intensity_at_viewpoint(arr=xyzi, title="raw plate",
+        point_cloud_visualization.vis_arr_by_intensity_at_viewpoint(arr=xyzi, title="1-raw plate",
                                                                     view_file="utils/camera-plate.json",
-                                                                    intensity_color=False)
+                                                                    intensity_color=True)
         # viewer = open3d.visualization.Visualizer()
         # viewer.create_window(window_name="Raw Points")
         # viewer.add_geometry(xyzi2pc(xyz=xyzi[:, :3], intensities=intensity2color(xyzi[:, 3])))
@@ -107,6 +107,8 @@ def handler(xyzi, dist_thresh=0.05,
         # opt.show_coordinate_frame = True
         # viewer.run()
         # viewer.destroy_window()
+
+    # np.save("points.npy", xyz)
 
     # === 1 === fit a plane
     # reference: http://www.open3d.org/docs/latest/tutorial/Basic/pointcloud.html#Plane-segmentation
@@ -131,6 +133,9 @@ def handler(xyzi, dist_thresh=0.05,
               np.array_equal(_pts_pcd, _pts_ori))
 
     if -1 < visualize <= 2:
+        point_cloud_visualization.vis_arr_by_intensity_at_viewpoint(arr=xyzi_rmv, title="2-after removal",
+                                                                    view_file="utils/camera-plate.json",
+                                                                    intensity_color=True)
         # viewer = open3d.visualization.Visualizer()
         # viewer.create_window(window_name="After Removal Sliced from Raw Points")
         # viewer.add_geometry(xyzi2pc(xyz=xyzi_rmv[:, :3], intensities=xyzi_rmv[:, 3]))
@@ -183,6 +188,9 @@ def handler(xyzi, dist_thresh=0.05,
     xyi_rmv_proj = xyzi[:, [0, 1, 3]]  # remove z-axis, shape (n,3)
 
     if -1 < visualize <= 3:
+        point_cloud_visualization.vis_arr_by_intensity_at_viewpoint(arr=xyzi_rmv_proj, title="3-after projection",
+                                                                    view_file="utils/camera-plate.json",
+                                                                    intensity_color=True)
         # viewer = open3d.visualization.Visualizer()
         # viewer.create_window(window_name="After Projection")
         # viewer.add_geometry(xyzi2pc(xyz=xyzi_rmv_proj[:, :3], intensities=xyzi_rmv_proj[:, 3]))
@@ -190,9 +198,6 @@ def handler(xyzi, dist_thresh=0.05,
         # opt.show_coordinate_frame = True
         # viewer.run()
         # viewer.destroy_window()
-        point_cloud_visualization.vis_arr_by_intensity_at_viewpoint(arr=xyzi_rmv_proj, title="After Projection",
-                                                                    view_file="utils/camera-plate.json",
-                                                                    intensity_color=False)
         # open3d.visualization.draw_geometries([xyzi2pc(xyz=xyzi_rmv_proj[:, :3], intensities=xyzi_rmv_proj[:, 3])],
         #                                      window_name="After Projection")
 
@@ -206,7 +211,7 @@ def handler(xyzi, dist_thresh=0.05,
         # === subplot 1: raw points + fit plane
         # raw points
         ax1 = fig.add_subplot(111, projection='3d')
-        ax1.scatter(xyz[:, 0], xyz[:, 1], xyz[:, 2], s=10, c="red", marker='.')
+        # ax1.scatter(xyz[:, 0], xyz[:, 1], xyz[:, 2], s=10, c="red", marker='.')
         ax1.set_xlabel('x'), ax1.set_ylabel('y'), ax1.set_zlabel('z')
         # normal vector of the fit plane
         plane_norm = np.array([plane_a, plane_b, plane_c])  # already normed
@@ -218,11 +223,20 @@ def handler(xyzi, dist_thresh=0.05,
                    z_start + plane_norm[2] * plot_norm_len,
                    arrow_length_ratio=0.1)
         # fit plane
-        xx = np.arange(np.min(xyz[:, 0]), np.max(xyz[:, 0]), 0.05)  # (min,max)=(-3.586, -3.383)
-        yy = np.arange(np.min(xyz[:, 1]), np.max(xyz[:, 1]), 0.05)  # (min,max)=(0.087, 0.611)
+        # xx = np.arange(np.min(xyz[:, 0]), np.max(xyz[:, 0]), 0.05)  # (min,max)=(-3.586, -3.383)
+        # yy = np.arange(np.min(xyz[:, 1]), np.max(xyz[:, 1]), 0.05)  # (min,max)=(0.087, 0.611)
+        xx = xyz[:, 0]
+        yy = xyz[:, 1]
         X, Y = np.meshgrid(xx, yy)
-        Z = (plane_a * 1. * X + plane_b * 1. * Y + plane_d) * -1. / plane_c
-        # ax1.plot_surface(X, Y, Z, color="lightgrey", alpha=0.2)  # ,cmap='rainbow')
+        Z = (plane_a * X + plane_b * Y + plane_d) * 1. / plane_c
+        # z = lambda x, y: (-ransac.estimator_.intercept_ - ransac.estimator_.coef_[0] * x
+        #                   - ransac.estimator_.coef_[1] * y) / ransac.estimator_.coef_[2]
+        # Z = z(X, Y)
+        print(X[0][:10])
+        print(Y[0][:10])
+        print(xyz[:, 2][:10])
+        print(Z[0][:10])
+        ax1.plot_surface(X, Y, Z, color="lightgrey", alpha=0.2)  # ,cmap='rainbow')
         plt.show()
 
     # === 5 === splat into grids
