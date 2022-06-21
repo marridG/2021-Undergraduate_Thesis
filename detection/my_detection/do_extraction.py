@@ -7,25 +7,29 @@ import board_extractor
 import plane_projection
 import point_cloud_visualization
 
-file = "data/seq60_00000.bin"
+frame = 321
+file = "data/seq60_00000__%d.bin" % frame
 data = data_loader.load_data(file=file)
 
-# # visualize
-# data_copy = data.copy()
-# # data_copy[:, 3] *= 256.
-# # data_copy[:, 3] /= 255.
-# # print(np.max(data_copy[:, 3]), np.min(data_copy[:, 3]))
-# # data_copy[:, 3] *= 1.2
-# # data_copy[:, 3] += 0.1
-# # print(np.max(data_copy[:, 3]), np.min(data_copy[:, 3]))
-# # data_copy[:, 3] = np.clip(data_copy[:, 3], 0., 0.99)
-# # print(np.max(data_copy[:, 3]), np.min(data_copy[:, 3]))
-# point_cloud_visualization.vis_arr_by_intensity_at_viewpoint(arr=data_copy, title="raw data", point_size=-1)
-# exit()
+# visualize
+data_copy = data.copy()
+data_copy = data_copy[np.where((data_copy[:, 0] < 0) & (data_copy[:, 0] > -10)
+                               & (data_copy[:, 1] < 5)
+                               & (data_copy[:, 1] > -5)
+                               )]
+# data_copy[:, 3] *= 256.
+# data_copy[:, 3] /= 255.
+# print(np.max(data_copy[:, 3]), np.min(data_copy[:, 3]))
+# data_copy[:, 3] *= 1.2
+# data_copy[:, 3] += 0.1
+# print(np.max(data_copy[:, 3]), np.min(data_copy[:, 3]))
+# data_copy[:, 3] = np.clip(data_copy[:, 3], 0., 0.99)
+# print(np.max(data_copy[:, 3]), np.min(data_copy[:, 3]))
+# point_cloud_visualization.vis_arr_by_intensity_at_viewpoint(arr=data_copy, title="0-0-raw data", point_size=-1)
 
 ENABLE_TIMER = False
 # extract planes
-extract_res_file = "data/extract_results.pkl"
+extract_res_file = "data/extract_results__%d.pkl" % frame
 draw_extract = False
 if ENABLE_TIMER is False and draw_extract is False and os.path.exists(extract_res_file):
     with open(extract_res_file, "rb") as f:
@@ -39,7 +43,7 @@ else:
                                              lowest=-1.3, highest=6,
                                              lowthr=2.5, highthr=0.2, totalthr=0.05,
                                              ratiothr=0.4, anglethr=5,
-                                             middle_res=draw_extract, visualize=3 if ENABLE_TIMER is False else -1)
+                                             middle_res=draw_extract, visualize=1 if ENABLE_TIMER is False else -1)
     with open(extract_res_file, "wb") as f:
         pickle.dump(ex_res, f)
     print("Extraction Results Saved as:", extract_res_file)
