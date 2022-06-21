@@ -5,6 +5,8 @@
 *.png
 *.txt
 *.npy
+*.pcap
+*.csv
 detection/my_detection/tests
 
 # IntelliJ project files
