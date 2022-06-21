@@ -2,6 +2,7 @@ import time
 import numpy as np
 import open3d
 from matplotlib import pyplot as plt
+from sklearn import linear_model
 
 from simulation.utils import dist_2_margin
 import point_cloud_visualization
@@ -120,6 +121,18 @@ def handler(xyzi, dist_thresh=0.05,
     [plane_a, plane_b, plane_c, plane_d] = plane_model
     print("Plane Fit as: %fx + %fy + %fz + %f = 0" % (plane_a, plane_b, plane_c, plane_d))
     pcd_proc = pcd.select_by_index(inliers)
+
+    XY = xyz[:, :]
+    Z = xyz[:, 2]
+    ransac = linear_model.RANSACRegressor(
+        linear_model.LinearRegression(),
+        residual_threshold=0.1
+    )
+    ransac.fit(XY, Z)
+    coeff = ransac.estimator_.coef_
+    print(coeff)
+    intercept = ransac.estimator_.intercept_
+    print(intercept)
 
     # === 2 === remove outliers
     # reference: http://www.open3d.org/docs/release/tutorial/geometry/pointcloud_outlier_removal.html
