@@ -141,11 +141,11 @@ def handler(xyzi, dist_thresh=0.05,
         print("[after Plane Fit Removal] Pts from PCD == Pts from Raw Data Sliced by Inliers' Indices:",
               np.array_equal(_pts_pcd, _pts_ori))
 
-    if -1 < visualize <= 2:
-        # open3d.visualization.draw_geometries([open3d.geometry.PointCloud(points=open3d.utility.Vector3dVector(xyz))])
-        point_cloud_visualization.vis_arr_by_intensity_at_viewpoint(arr=xyzi_fit, title="1.5-fit plane",
-                                                                    view_file="utils/camera-plate.json",
-                                                                    intensity_color=True)
+    # if -1 < visualize <= 2:
+    #     # open3d.visualization.draw_geometries([open3d.geometry.PointCloud(points=open3d.utility.Vector3dVector(xyz))])
+    #     point_cloud_visualization.vis_arr_by_intensity_at_viewpoint(arr=xyzi_fit, title="1.5-fit plane",
+    #                                                                 view_file="utils/camera-plate.json",
+    #                                                                 intensity_color=True)
 
     XY = xyz[:, :]
     Z = xyz[:, 2]
