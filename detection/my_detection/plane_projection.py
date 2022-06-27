@@ -85,16 +85,29 @@ def handler(xyzi, dist_thresh=0.05,
     xyz = xyzi[:, :3]
 
     if False:
-        pcd = open3d.geometry.PointCloud()
-        pcd.points = open3d.utility.Vector3dVector(xyz)
+        _xyz_off_board = xyz[np.where(xyz[:, 0] < -10)]
+        _xyz_on_board = xyz[np.where(xyz[:, 0] > -10)]
+        _pcd_off = open3d.geometry.PointCloud(points=open3d.utility.Vector3dVector(_xyz_off_board))
+        _pcd_on = open3d.geometry.PointCloud(points=open3d.utility.Vector3dVector(_xyz_on_board))
+
+        # print("Showing outliers (red) and inliers (gray): ")
+        _pcd_off.paint_uniform_color([1, 1, 0])  # yellow
+        _pcd_on.paint_uniform_color([1, 0, 0])  # red
+
         vis = open3d.visualization.Visualizer()
-        vis.create_window(window_name='pcd', width=1728, height=972)
-        vis.add_geometry(pcd)
-        vis.get_render_option().load_from_json('renderoption.json')
-        vis.run()  # user changes the view and press "q" to terminate
-        param = vis.get_view_control().convert_to_pinhole_camera_parameters()
-        open3d.io.write_pinhole_camera_parameters("utils/camera-plate.json", param)
-        # vis.destroy_window()
+        vis.create_window(window_name="On-Off Board Points", width=1728, height=972)
+        ctr = vis.get_view_control()
+        param = open3d.io.read_pinhole_camera_parameters("utils/camera-plate.json")
+        vis.add_geometry(_pcd_off)
+        vis.add_geometry(_pcd_on)
+        opt = vis.get_render_option()
+        opt.point_size = 10
+        ctr.convert_from_pinhole_camera_parameters(param)
+        vis.run()
+        vis.destroy_window()
+        np.save("points_xyz_off_board.npy", _xyz_off_board)
+        np.save("points_xyz_on_board.npy", _xyz_on_board)
+        print(end="")
 
     if -1 < visualize <= 1:
         # open3d.visualization.draw_geometries([open3d.geometry.PointCloud(points=open3d.utility.Vector3dVector(xyz))])
