@@ -134,6 +134,18 @@ def handler(xyzi, dist_thresh=0.05,
     [plane_a, plane_b, plane_c, plane_d] = plane_model
     print("Plane Fit as: %fx + %fy + %fz + %f = 0" % (plane_a, plane_b, plane_c, plane_d))
     pcd_proc = pcd.select_by_index(inliers)
+    xyzi_fit = xyzi[inliers]  # 3d points, shape (n,4); identity assured (see below)
+    if validate:  # check whether points from `pcd_rmv` are identical with those in `xyzi_rmv`
+        _pts_pcd = np.asarray(pcd_proc.points)  # .tolist()
+        _pts_ori = xyzi_fit[:, :3]  # .tolist()
+        print("[after Plane Fit Removal] Pts from PCD == Pts from Raw Data Sliced by Inliers' Indices:",
+              np.array_equal(_pts_pcd, _pts_ori))
+
+    if -1 < visualize <= 2:
+        # open3d.visualization.draw_geometries([open3d.geometry.PointCloud(points=open3d.utility.Vector3dVector(xyz))])
+        point_cloud_visualization.vis_arr_by_intensity_at_viewpoint(arr=xyzi_fit, title="1.5-fit plane",
+                                                                    view_file="utils/camera-plate.json",
+                                                                    intensity_color=True)
 
     XY = xyz[:, :]
     Z = xyz[:, 2]
@@ -151,7 +163,7 @@ def handler(xyzi, dist_thresh=0.05,
     # reference: http://www.open3d.org/docs/release/tutorial/geometry/pointcloud_outlier_removal.html
     # doc: http://www.open3d.org/docs/release/python_api/open3d.geometry.PointCloud.html?highlight=remove_statistical_outlier#open3d.geometry.PointCloud.remove_statistical_outlier
     pcd_rmv, _pcd_inlier_idx = pcd_proc.remove_statistical_outlier(nb_neighbors=20, std_ratio=2.0)
-    xyzi_rmv = xyzi[_pcd_inlier_idx]  # 3d points, shape (n,4); identity assured (see below)
+    xyzi_rmv = xyzi_fit[_pcd_inlier_idx]  # 3d points, shape (n,4); identity assured (see below)
     if validate:  # check whether points from `pcd_rmv` are identical with those in `xyzi_rmv`
         _pts_pcd = np.asarray(pcd_rmv.points)  # .tolist()
         _pts_ori = xyzi_rmv[:, :3]  # .tolist()
@@ -169,18 +181,14 @@ def handler(xyzi, dist_thresh=0.05,
         # opt.show_coordinate_frame = True
         # viewer.run()
         # viewer.destroy_window()
-        # del viewer
-        # # open3d.visualization.draw_geometries([xyzi2pc(xyz=xyzi_rmv[:, :3], intensities=xyzi_rmv[:, 3])],
-        # #                                      window_name="After Removal Sliced from Raw Points")
-        # display_inlier_outlier(pcd_rmv, _pcd_inlier_idx)
         inlier_cloud = pcd_rmv.select_by_index(_pcd_inlier_idx)
         outlier_cloud_1 = pcd.select_by_index(inliers, invert=True)
-        outlier_cloud_2 = pcd.select_by_index(_pcd_inlier_idx, invert=True)
+        outlier_cloud_2 = pcd_proc.select_by_index(_pcd_inlier_idx, invert=True)
 
         # print("Showing outliers (red) and inliers (gray): ")
         outlier_cloud_1.paint_uniform_color([1, 1, 0])  # yellow
         outlier_cloud_2.paint_uniform_color([1, 0, 0])  # red
-        inlier_cloud.paint_uniform_color([0.8, 0.8, 0.8])
+        inlier_cloud.paint_uniform_color([0.8, 0.8, 0.8])  # grey
 
         vis = open3d.visualization.Visualizer()
         vis.create_window(window_name="Point Removals", width=1728, height=972)
@@ -194,13 +202,6 @@ def handler(xyzi, dist_thresh=0.05,
         ctr.convert_from_pinhole_camera_parameters(param)
         vis.run()
         vis.destroy_window()
-        # open3d.visualization.draw_geometries([inlier_cloud, outlier_cloud_1, outlier_cloud_2],
-        #                                      window_name="outliers",
-        #                                      # zoom=0.3412,
-        #                                      # front=[0.4257, -0.2125, -0.8795],
-        #                                      # lookat=[2.6172, 2.0475, 1.532],
-        #                                      # up=[-0.0694, -0.9768, 0.2024]
-        #                                      )
 
     # === 3 === project onto the fit plane
     xyzi_rmv_proj = project_onto_plane_arr(arr=xyzi_rmv, p_a=plane_a, p_b=plane_b, p_c=plane_c, p_d=plane_d,
