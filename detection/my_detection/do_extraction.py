@@ -7,16 +7,17 @@ import board_extractor
 import plane_projection
 import point_cloud_visualization
 
-frame = 321
-file = "data/seq60_00000__%d.bin" % frame
+group, frame = 3, 328
+file = "data/seq60_00000__%d-%d.bin" % (group, frame)
 data = data_loader.load_data(file=file)
 
 # visualize
 data_copy = data.copy()
-data_copy = data_copy[np.where((data_copy[:, 0] < 0) & (data_copy[:, 0] > -10)
-                               & (data_copy[:, 1] < 5)
-                               & (data_copy[:, 1] > -5)
-                               )]
+if 1 == group:
+    data_copy = data_copy[np.where((data_copy[:, 0] < 0) & (data_copy[:, 0] > -10)
+                                   & (data_copy[:, 1] < 5)
+                                   & (data_copy[:, 1] > -5)
+                                   )]
 # data_copy[:, 3] *= 256.
 # data_copy[:, 3] /= 255.
 # print(np.max(data_copy[:, 3]), np.min(data_copy[:, 3]))
@@ -25,11 +26,11 @@ data_copy = data_copy[np.where((data_copy[:, 0] < 0) & (data_copy[:, 0] > -10)
 # print(np.max(data_copy[:, 3]), np.min(data_copy[:, 3]))
 # data_copy[:, 3] = np.clip(data_copy[:, 3], 0., 0.99)
 # print(np.max(data_copy[:, 3]), np.min(data_copy[:, 3]))
-# point_cloud_visualization.vis_arr_by_intensity_at_viewpoint(arr=data_copy, title="0-0-raw data", point_size=-1)
+point_cloud_visualization.vis_arr_by_intensity_at_viewpoint(arr=data_copy, title="0-0-raw data", point_size=-1)
 
 ENABLE_TIMER = False
 # extract planes
-extract_res_file = "data/extract_results__%d.pkl" % frame
+extract_res_file = "data/extract_results__%d-%d.pkl" % (group, frame)
 draw_extract = False
 if ENABLE_TIMER is False and draw_extract is False and os.path.exists(extract_res_file):
     with open(extract_res_file, "rb") as f:
