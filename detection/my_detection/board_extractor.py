@@ -52,11 +52,12 @@ def detect_poles(xyz, neighbourthr=0.5, min_point_num=3, dis_thr=0.08, width_thr
         for _cluster_idx, _cluster in enumerate(clusters):  # <int>, <np.ndarray> (shape=(n,2), dtype=float64)
             for __range_img_index in _cluster:  # <np.ndarray> (shape=(n,2), dtype=float64)
                 __range_img_index = [int(__range_img_index[0]), int(__range_img_index[1])]
-                __xyzi = proj_vertex[__range_img_index[0]][__range_img_index[1]]
-                mid_pt_cloud = np.append(mid_pt_cloud, __xyzi[:3]).reshape(-1, 3)
+                # __xyzi = proj_vertex[__range_img_index[0]][__range_img_index[1]]
+                # mid_pt_cloud = np.append(mid_pt_cloud, __xyzi[:3]).reshape(-1, 3)
                 for ___xyzi in proj_xyzi[__range_img_index[0]][__range_img_index[1]]:
+                    mid_pt_cloud = np.append(mid_pt_cloud, ___xyzi[:3]).reshape(-1, 3)
+                    mid_pt_cloud_label = np.append(mid_pt_cloud_label, _cluster_idx)
                     mid_pt_cloud_xyzi = np.append(mid_pt_cloud_xyzi, ___xyzi).reshape(-1, 4)
-                mid_pt_cloud_label = np.append(mid_pt_cloud_label, _cluster_idx)
         results["cluster"]["pt_cloud"] = mid_pt_cloud
         results["cluster"]["pt_cloud_label"] = mid_pt_cloud_label
         if -1 < visualize <= 1:
@@ -124,11 +125,12 @@ def detect_poles(xyz, neighbourthr=0.5, min_point_num=3, dis_thr=0.08, width_thr
         for _cluster_idx, _cluster in enumerate(clusters_list):  # <int>, <np.ndarray> (shape=(n,2), dtype=float64)
             for __range_img_index in _cluster:  # <np.ndarray> (shape=(n,2), dtype=float64)
                 __range_img_index = [int(__range_img_index[0]), int(__range_img_index[1])]
-                __xyzi = proj_vertex[__range_img_index[0]][__range_img_index[1]]
-                mid_pt_cloud = np.append(mid_pt_cloud, __xyzi[:3]).reshape(-1, 3)
+                # __xyzi = proj_vertex[__range_img_index[0]][__range_img_index[1]]
+                # mid_pt_cloud = np.append(mid_pt_cloud, __xyzi[:3]).reshape(-1, 3)
                 for ___xyzi in proj_xyzi[__range_img_index[0]][__range_img_index[1]]:
+                    mid_pt_cloud = np.append(mid_pt_cloud, ___xyzi[:3]).reshape(-1, 3)
+                    mid_pt_cloud_label = np.append(mid_pt_cloud_label, _cluster_idx)
                     mid_pt_cloud_xyzi = np.append(mid_pt_cloud_xyzi, ___xyzi).reshape(-1, 4)
-                mid_pt_cloud_label = np.append(mid_pt_cloud_label, _cluster_idx)
         results["cluster_filter_1"]["pt_cloud"] = mid_pt_cloud
         results["cluster_filter_1"]["pt_cloud_label"] = mid_pt_cloud_label
         if -1 < visualize <= 2:
@@ -222,11 +224,12 @@ def detect_poles(xyz, neighbourthr=0.5, min_point_num=3, dis_thr=0.08, width_thr
                 clusters_list_filter_2):  # <int>, <np.ndarray> (shape=(n,2), dtype=float64)
             for __range_img_index in _cluster:  # <np.ndarray> (shape=(n,2), dtype=float64)
                 __range_img_index = [int(__range_img_index[0]), int(__range_img_index[1])]
-                __xyzi = proj_vertex[__range_img_index[0]][__range_img_index[1]]
-                mid_pt_cloud = np.append(mid_pt_cloud, __xyzi[:3]).reshape(-1, 3)
+                # __xyzi = proj_vertex[__range_img_index[0]][__range_img_index[1]]
+                # mid_pt_cloud = np.append(mid_pt_cloud, __xyzi[:3]).reshape(-1, 3)
                 for ___xyzi in proj_xyzi[__range_img_index[0]][__range_img_index[1]]:
+                    mid_pt_cloud = np.append(mid_pt_cloud, ___xyzi[:3]).reshape(-1, 3)
+                    mid_pt_cloud_label = np.append(mid_pt_cloud_label, _cluster_idx)
                     mid_pt_cloud_xyzi = np.append(mid_pt_cloud_xyzi, ___xyzi).reshape(-1, 4)
-                mid_pt_cloud_label = np.append(mid_pt_cloud_label, _cluster_idx)
         results["cluster_filter_2"]["pt_cloud"] = mid_pt_cloud
         results["cluster_filter_2"]["pt_cloud_label"] = mid_pt_cloud_label
         if -1 < visualize <= 3:
@@ -278,11 +281,12 @@ def detect_poles(xyz, neighbourthr=0.5, min_point_num=3, dis_thr=0.08, width_thr
                 clusters_list_filter_3):  # <int>, <np.ndarray> (shape=(n,2), dtype=float64)
             for __range_img_index in _cluster:  # <np.ndarray> (shape=(n,2), dtype=float64)
                 __range_img_index = [int(__range_img_index[0]), int(__range_img_index[1])]
-                __xyzi = proj_vertex[__range_img_index[0]][__range_img_index[1]]  # intensity is 1
-                mid_pt_cloud = np.append(mid_pt_cloud, __xyzi[:3]).reshape(-1, 3)
+                # __xyzi = proj_vertex[__range_img_index[0]][__range_img_index[1]]  # intensity is 1
+                # mid_pt_cloud = np.append(mid_pt_cloud, __xyzi[:3]).reshape(-1, 3)
                 for ___xyzi in proj_xyzi[__range_img_index[0]][__range_img_index[1]]:
+                    mid_pt_cloud = np.append(mid_pt_cloud, ___xyzi[:3]).reshape(-1, 3)
+                    mid_pt_cloud_label = np.append(mid_pt_cloud_label, _cluster_idx)
                     mid_pt_cloud_xyzi = np.append(mid_pt_cloud_xyzi, ___xyzi).reshape(-1, 4)
-                mid_pt_cloud_label = np.append(mid_pt_cloud_label, _cluster_idx)
         results["cluster_filter_3"]["pt_cloud"] = mid_pt_cloud
         results["cluster_filter_3"]["pt_cloud_label"] = mid_pt_cloud_label
         if -1 < visualize <= 4:
@@ -306,16 +310,21 @@ def detect_poles(xyz, neighbourthr=0.5, min_point_num=3, dis_thr=0.08, width_thr
                 res_mid_cluster_list, res_mid_cluster_label):  # <np.ndarray> (shape=(n,2), dtype=float64), <int>
             for __range_img_index in _cluster:  # <np.ndarray> (shape=(n,2), dtype=float64)
                 __range_img_index = [int(__range_img_index[0]), int(__range_img_index[1])]
-                __xyzi = proj_vertex[__range_img_index[0]][__range_img_index[1]]
-                mid_pt_cloud = np.append(mid_pt_cloud, __xyzi[:3]).reshape(-1, 3)
-                mid_pt_cloud_colors = np.append(mid_pt_cloud_colors, _candidate_colors[_cluster_label]).reshape(-1, 4)
+                # __xyzi = proj_vertex[__range_img_index[0]][__range_img_index[1]]
+                # mid_pt_cloud = np.append(mid_pt_cloud, __xyzi[:3]).reshape(-1, 3)
+                for ___xyzi in proj_xyzi[__range_img_index[0]][__range_img_index[1]]:
+                    mid_pt_cloud = np.append(mid_pt_cloud, ___xyzi[:3]).reshape(-1, 3)
+                    mid_pt_cloud_colors = np.append(
+                        mid_pt_cloud_colors, _candidate_colors[_cluster_label]).reshape(-1, 4)
         # add result clusters
         for _cluster in clusters_list_filter_3:  # <np.ndarray> (shape=(n,2), dtype=float64)
             for __range_img_index in _cluster:  # <np.ndarray> (shape=(n,2), dtype=float64)
                 __range_img_index = [int(__range_img_index[0]), int(__range_img_index[1])]
-                __xyzi = proj_vertex[__range_img_index[0]][__range_img_index[1]]
-                mid_pt_cloud = np.append(mid_pt_cloud, __xyzi[:3]).reshape(-1, 3)
-                mid_pt_cloud_colors = np.append(mid_pt_cloud_colors, _remain_color).reshape(-1, 4)
+                # __xyzi = proj_vertex[__range_img_index[0]][__range_img_index[1]]
+                # mid_pt_cloud = np.append(mid_pt_cloud, __xyzi[:3]).reshape(-1, 3)
+                for ___xyzi in proj_xyzi[__range_img_index[0]][__range_img_index[1]]:
+                    mid_pt_cloud = np.append(mid_pt_cloud, ___xyzi[:3]).reshape(-1, 3)
+                    mid_pt_cloud_colors = np.append(mid_pt_cloud_colors, _remain_color).reshape(-1, 4)
         point_cloud_visualization.vis_arr_with_color(arr=mid_pt_cloud, colors=mid_pt_cloud_colors,
                                                      title="Point Cloud Filtering Result")
 
