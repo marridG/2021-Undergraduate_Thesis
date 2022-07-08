@@ -20,7 +20,7 @@ def detect_poles(xyz, neighbourthr=0.5, min_point_num=3, dis_thr=0.08, width_thr
     }
 
     toc1 = time.perf_counter()
-    range_data, proj_vertex, proj_idx, xyzi_z_cut = range_projection(
+    range_data, proj_vertex, proj_idx, xyzi_z_cut, proj_xyzi = range_projection(
         xyz, fov_up=fov_up, fov_down=fov_down,
         proj_H=proj_H, proj_W=proj_W,
         max_range=50,
@@ -47,18 +47,25 @@ def detect_poles(xyz, neighbourthr=0.5, min_point_num=3, dis_thr=0.08, width_thr
     # === 1 visualize
     if middle_res:
         mid_pt_cloud = np.zeros((0, 3))  # x,y,z location only
+        mid_pt_cloud_xyzi = np.zeros((0, 4))  # x,y,z,i
         mid_pt_cloud_label = np.zeros((0,))  # labels
         for _cluster_idx, _cluster in enumerate(clusters):  # <int>, <np.ndarray> (shape=(n,2), dtype=float64)
             for __range_img_index in _cluster:  # <np.ndarray> (shape=(n,2), dtype=float64)
                 __range_img_index = [int(__range_img_index[0]), int(__range_img_index[1])]
-                __xyzi = proj_vertex[__range_img_index[0]][__range_img_index[1]]
-                mid_pt_cloud = np.append(mid_pt_cloud, __xyzi[:3]).reshape(-1, 3)
-                mid_pt_cloud_label = np.append(mid_pt_cloud_label, _cluster_idx)
+                # __xyzi = proj_vertex[__range_img_index[0]][__range_img_index[1]]
+                # mid_pt_cloud = np.append(mid_pt_cloud, __xyzi[:3]).reshape(-1, 3)
+                for ___xyzi in proj_xyzi[__range_img_index[0]][__range_img_index[1]]:
+                    mid_pt_cloud = np.append(mid_pt_cloud, ___xyzi[:3]).reshape(-1, 3)
+                    mid_pt_cloud_label = np.append(mid_pt_cloud_label, _cluster_idx)
+                    mid_pt_cloud_xyzi = np.append(mid_pt_cloud_xyzi, ___xyzi).reshape(-1, 4)
         results["cluster"]["pt_cloud"] = mid_pt_cloud
         results["cluster"]["pt_cloud_label"] = mid_pt_cloud_label
         if -1 < visualize <= 1:
             point_cloud_visualization.vis_arr_with_label(arr=mid_pt_cloud, label=mid_pt_cloud_label,
                                                          title="Point Cloud after Raw Clustering")
+            point_cloud_visualization.vis_arr_by_intensity_at_viewpoint(
+                arr=mid_pt_cloud_xyzi, title="0-1-Point Cloud after Raw Clustering",
+                view_file="utils/camera-plate.json", intensity_color=True)
 
     # === 2 === [ROUND 1] filter out some clusters by: ratio, smaller distance points ratio
     clusters_list = []  # result for round 1 filtering
@@ -113,18 +120,25 @@ def detect_poles(xyz, neighbourthr=0.5, min_point_num=3, dis_thr=0.08, width_thr
     # === 2 visualize
     if middle_res:
         mid_pt_cloud = np.zeros((0, 3))  # x,y,z location only
+        mid_pt_cloud_xyzi = np.zeros((0, 4))  # x,y,z,i
         mid_pt_cloud_label = np.zeros((0,))  # labels
         for _cluster_idx, _cluster in enumerate(clusters_list):  # <int>, <np.ndarray> (shape=(n,2), dtype=float64)
             for __range_img_index in _cluster:  # <np.ndarray> (shape=(n,2), dtype=float64)
                 __range_img_index = [int(__range_img_index[0]), int(__range_img_index[1])]
-                __xyzi = proj_vertex[__range_img_index[0]][__range_img_index[1]]
-                mid_pt_cloud = np.append(mid_pt_cloud, __xyzi[:3]).reshape(-1, 3)
-                mid_pt_cloud_label = np.append(mid_pt_cloud_label, _cluster_idx)
+                # __xyzi = proj_vertex[__range_img_index[0]][__range_img_index[1]]
+                # mid_pt_cloud = np.append(mid_pt_cloud, __xyzi[:3]).reshape(-1, 3)
+                for ___xyzi in proj_xyzi[__range_img_index[0]][__range_img_index[1]]:
+                    mid_pt_cloud = np.append(mid_pt_cloud, ___xyzi[:3]).reshape(-1, 3)
+                    mid_pt_cloud_label = np.append(mid_pt_cloud_label, _cluster_idx)
+                    mid_pt_cloud_xyzi = np.append(mid_pt_cloud_xyzi, ___xyzi).reshape(-1, 4)
         results["cluster_filter_1"]["pt_cloud"] = mid_pt_cloud
         results["cluster_filter_1"]["pt_cloud_label"] = mid_pt_cloud_label
         if -1 < visualize <= 2:
             point_cloud_visualization.vis_arr_with_label(arr=mid_pt_cloud, label=mid_pt_cloud_label,
                                                          title="Point Cloud after Round 1 Cluster Filtering")
+            point_cloud_visualization.vis_arr_by_intensity_at_viewpoint(
+                arr=mid_pt_cloud_xyzi, title="0-2-Point Cloud after Round 1 Cluster Filtering",
+                view_file="utils/camera-plate.json", intensity_color=True)
 
     # === 3 === filter out some clusters by: z_min/max, circle
     clusters_list_filter_2 = list(clusters_list)  # result for round 2 filtering
@@ -204,19 +218,26 @@ def detect_poles(xyz, neighbourthr=0.5, min_point_num=3, dis_thr=0.08, width_thr
     # === 3 visualize
     if middle_res:
         mid_pt_cloud = np.zeros((0, 3))  # x,y,z location only
+        mid_pt_cloud_xyzi = np.zeros((0, 4))  # x,y,z,i
         mid_pt_cloud_label = np.zeros((0,))  # labels
         for _cluster_idx, _cluster in enumerate(
                 clusters_list_filter_2):  # <int>, <np.ndarray> (shape=(n,2), dtype=float64)
             for __range_img_index in _cluster:  # <np.ndarray> (shape=(n,2), dtype=float64)
                 __range_img_index = [int(__range_img_index[0]), int(__range_img_index[1])]
-                __xyzi = proj_vertex[__range_img_index[0]][__range_img_index[1]]
-                mid_pt_cloud = np.append(mid_pt_cloud, __xyzi[:3]).reshape(-1, 3)
-                mid_pt_cloud_label = np.append(mid_pt_cloud_label, _cluster_idx)
+                # __xyzi = proj_vertex[__range_img_index[0]][__range_img_index[1]]
+                # mid_pt_cloud = np.append(mid_pt_cloud, __xyzi[:3]).reshape(-1, 3)
+                for ___xyzi in proj_xyzi[__range_img_index[0]][__range_img_index[1]]:
+                    mid_pt_cloud = np.append(mid_pt_cloud, ___xyzi[:3]).reshape(-1, 3)
+                    mid_pt_cloud_label = np.append(mid_pt_cloud_label, _cluster_idx)
+                    mid_pt_cloud_xyzi = np.append(mid_pt_cloud_xyzi, ___xyzi).reshape(-1, 4)
         results["cluster_filter_2"]["pt_cloud"] = mid_pt_cloud
         results["cluster_filter_2"]["pt_cloud_label"] = mid_pt_cloud_label
         if -1 < visualize <= 3:
             point_cloud_visualization.vis_arr_with_label(arr=mid_pt_cloud, label=mid_pt_cloud_label,
                                                          title="Point Cloud after Round 2 Cluster Filtering")
+            point_cloud_visualization.vis_arr_by_intensity_at_viewpoint(
+                arr=mid_pt_cloud_xyzi, title="0-3-Point Cloud after Round 2 Cluster Filtering",
+                view_file="utils/camera-plate.json", intensity_color=True)
 
     # === 4 === filter out some clusters by: angle between normal vectors and the horizontal surface
     clusters_list_filter_3 = list(clusters_list_filter_2)  # result for round 3 filtering
@@ -254,19 +275,26 @@ def detect_poles(xyz, neighbourthr=0.5, min_point_num=3, dis_thr=0.08, width_thr
     # === 4 visualize
     if middle_res:
         mid_pt_cloud = np.zeros((0, 3))  # x,y,z location only
+        mid_pt_cloud_xyzi = np.zeros((0, 4))  # x,y,z,i
         mid_pt_cloud_label = np.zeros((0,))  # labels
         for _cluster_idx, _cluster in enumerate(
                 clusters_list_filter_3):  # <int>, <np.ndarray> (shape=(n,2), dtype=float64)
             for __range_img_index in _cluster:  # <np.ndarray> (shape=(n,2), dtype=float64)
                 __range_img_index = [int(__range_img_index[0]), int(__range_img_index[1])]
-                __xyzi = proj_vertex[__range_img_index[0]][__range_img_index[1]]
-                mid_pt_cloud = np.append(mid_pt_cloud, __xyzi[:3]).reshape(-1, 3)
-                mid_pt_cloud_label = np.append(mid_pt_cloud_label, _cluster_idx)
+                # __xyzi = proj_vertex[__range_img_index[0]][__range_img_index[1]]  # intensity is 1
+                # mid_pt_cloud = np.append(mid_pt_cloud, __xyzi[:3]).reshape(-1, 3)
+                for ___xyzi in proj_xyzi[__range_img_index[0]][__range_img_index[1]]:
+                    mid_pt_cloud = np.append(mid_pt_cloud, ___xyzi[:3]).reshape(-1, 3)
+                    mid_pt_cloud_label = np.append(mid_pt_cloud_label, _cluster_idx)
+                    mid_pt_cloud_xyzi = np.append(mid_pt_cloud_xyzi, ___xyzi).reshape(-1, 4)
         results["cluster_filter_3"]["pt_cloud"] = mid_pt_cloud
         results["cluster_filter_3"]["pt_cloud_label"] = mid_pt_cloud_label
         if -1 < visualize <= 4:
             point_cloud_visualization.vis_arr_with_label(arr=mid_pt_cloud, label=mid_pt_cloud_label,
                                                          title="Point Cloud after Round 3 Cluster Filtering")
+            point_cloud_visualization.vis_arr_by_intensity_at_viewpoint(
+                arr=mid_pt_cloud_xyzi, title="0-4-Point Cloud after Round 3 Cluster Filtering",
+                view_file="utils/camera-plate.json", intensity_color=True)
 
     # all visualize
     if middle_res:
@@ -282,29 +310,37 @@ def detect_poles(xyz, neighbourthr=0.5, min_point_num=3, dis_thr=0.08, width_thr
                 res_mid_cluster_list, res_mid_cluster_label):  # <np.ndarray> (shape=(n,2), dtype=float64), <int>
             for __range_img_index in _cluster:  # <np.ndarray> (shape=(n,2), dtype=float64)
                 __range_img_index = [int(__range_img_index[0]), int(__range_img_index[1])]
-                __xyzi = proj_vertex[__range_img_index[0]][__range_img_index[1]]
-                mid_pt_cloud = np.append(mid_pt_cloud, __xyzi[:3]).reshape(-1, 3)
-                mid_pt_cloud_colors = np.append(mid_pt_cloud_colors, _candidate_colors[_cluster_label]).reshape(-1, 4)
-        # addd result clusters
+                # __xyzi = proj_vertex[__range_img_index[0]][__range_img_index[1]]
+                # mid_pt_cloud = np.append(mid_pt_cloud, __xyzi[:3]).reshape(-1, 3)
+                for ___xyzi in proj_xyzi[__range_img_index[0]][__range_img_index[1]]:
+                    mid_pt_cloud = np.append(mid_pt_cloud, ___xyzi[:3]).reshape(-1, 3)
+                    mid_pt_cloud_colors = np.append(
+                        mid_pt_cloud_colors, _candidate_colors[_cluster_label]).reshape(-1, 4)
+        # add result clusters
         for _cluster in clusters_list_filter_3:  # <np.ndarray> (shape=(n,2), dtype=float64)
             for __range_img_index in _cluster:  # <np.ndarray> (shape=(n,2), dtype=float64)
                 __range_img_index = [int(__range_img_index[0]), int(__range_img_index[1])]
-                __xyzi = proj_vertex[__range_img_index[0]][__range_img_index[1]]
-                mid_pt_cloud = np.append(mid_pt_cloud, __xyzi[:3]).reshape(-1, 3)
-                mid_pt_cloud_colors = np.append(mid_pt_cloud_colors, _remain_color).reshape(-1, 4)
+                # __xyzi = proj_vertex[__range_img_index[0]][__range_img_index[1]]
+                # mid_pt_cloud = np.append(mid_pt_cloud, __xyzi[:3]).reshape(-1, 3)
+                for ___xyzi in proj_xyzi[__range_img_index[0]][__range_img_index[1]]:
+                    mid_pt_cloud = np.append(mid_pt_cloud, ___xyzi[:3]).reshape(-1, 3)
+                    mid_pt_cloud_colors = np.append(mid_pt_cloud_colors, _remain_color).reshape(-1, 4)
         point_cloud_visualization.vis_arr_with_color(arr=mid_pt_cloud, colors=mid_pt_cloud_colors,
                                                      title="Point Cloud Filtering Result")
 
     # construct clusters of points with xyzi for return
     res_cluster_points = []  # <list>of<np.ndarray>, each of shape (n,4)
     for _cluster in clusters_list_filter_3:  # <np.ndarray> (shape=(n,2), dtype=float64)
-        pt_xyzi = np.zeros((0, 4))  # dtype=np.float64
+        pt_xyzi = np.zeros((0, 4), dtype=np.float32)  # dtype=np.float64
         for __range_img_index in _cluster:  # <np.ndarray> (shape=(n,2), dtype=float64)
+            # __range_img_index = [int(__range_img_index[0]), int(__range_img_index[1])]
+            # __raw_pt_cloud_index = proj_idx[__range_img_index[0]][__range_img_index[1]]
+            # __xyzi = xyzi_z_cut[__raw_pt_cloud_index]
+            # # __xyzi = proj_vertex[__range_img_index[0]][__range_img_index[1]]
+            # pt_xyzi = np.append(pt_xyzi, __xyzi).reshape(-1, 4)
             __range_img_index = [int(__range_img_index[0]), int(__range_img_index[1])]
-            __raw_pt_cloud_index = proj_idx[__range_img_index[0]][__range_img_index[1]]
-            __xyzi = xyzi_z_cut[__raw_pt_cloud_index]
-            # __xyzi = proj_vertex[__range_img_index[0]][__range_img_index[1]]
-            pt_xyzi = np.append(pt_xyzi, __xyzi).reshape(-1, 4)
+            for ___xyzi in proj_xyzi[__range_img_index[0]][__range_img_index[1]]:
+                pt_xyzi = np.append(pt_xyzi, ___xyzi).reshape(-1, 4)
         res_cluster_points.append(pt_xyzi)
 
     toc2 = time.perf_counter()
@@ -489,12 +525,23 @@ def range_projection(current_vertex, fov_up=10.67, fov_down=-30.67, proj_H=32, p
     proj_idx = np.full((proj_H, proj_W), -1,
                        dtype=np.int32)  # [H,W] index (-1 is no data)
 
+    # proj_dup_cnt = np.zeros((proj_H, proj_W), dtype=int)
+    # for _proj_y, _proj_x in zip(proj_y, proj_x):
+    #     proj_dup_cnt[_proj_y, _proj_x] += 1
+    # np.save("tests/points_proj_dup_cnt.npy", proj_dup_cnt)
+    proj_all_vertex = [[[] for _ in range(proj_W)] for _ in range(proj_H)]
+    current_vertex_reordered = current_vertex[order]
+    for _vertex_idx in range(current_vertex.shape[0]):
+        _proj_y, _proj_x = proj_y[_vertex_idx], proj_x[_vertex_idx]
+        _vertex_xyzi = current_vertex_reordered[_vertex_idx]
+        proj_all_vertex[_proj_y][_proj_x].append(_vertex_xyzi)
+
     proj_range[proj_y, proj_x] = depth
     proj_vertex[proj_y, proj_x] = np.array([scan_x, scan_y, scan_z, np.ones(len(scan_x))]).T
     proj_idx[proj_y, proj_x] = indices
 
     # res = {"proj_range": proj_range, "proj_vertex": proj_vertex, "proj_idx": proj_idx}
-    return proj_range, proj_vertex, proj_idx, current_vertex
+    return proj_range, proj_vertex, proj_idx, current_vertex, proj_all_vertex
 
 
 def fit_circle(x, y):
