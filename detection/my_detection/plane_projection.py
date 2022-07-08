@@ -211,22 +211,30 @@ def handler(xyzi, dist_thresh=0.05,
                                            x0=0, y0=0, z0=0)
         _pts_pcd = np.asarray(_pcd_rmv_proj.points)
         _pts_ori = xyzi_rmv_proj[:, :3]
-        print("[after Projection] Pts by PCD == Pts by Array:", np.array_equal(_pts_pcd, _pts_ori))
-    xyi_rmv_proj = xyzi[:, [0, 1, 3]]  # remove z-axis, shape (n,3)
+        _pts_are_eq = np.array_equal(_pts_pcd, _pts_ori)
+        print("[after Projection] Pts by PCD == Pts by Array:", _pts_are_eq, end="")
+        if _pts_are_eq is False:
+            print(". Difference:", np.mean(_pts_ori - _pts_pcd))
+        else:
+            print()
+    xyi_rmv_proj = xyzi_rmv_proj[:, [0, 1, 3]]  # remove z-axis, shape (n,3)
 
     if -1 < visualize <= 3:
         point_cloud_visualization.vis_arr_by_intensity_at_viewpoint(arr=xyzi_rmv_proj, title="3-after projection",
                                                                     view_file="utils/camera-plate.json",
                                                                     intensity_color=True)
-        # viewer = open3d.visualization.Visualizer()
-        # viewer.create_window(window_name="After Projection")
-        # viewer.add_geometry(xyzi2pc(xyz=xyzi_rmv_proj[:, :3], intensities=xyzi_rmv_proj[:, 3]))
-        # opt = viewer.get_render_option()
-        # opt.show_coordinate_frame = True
-        # viewer.run()
-        # viewer.destroy_window()
-        # open3d.visualization.draw_geometries([xyzi2pc(xyz=xyzi_rmv_proj[:, :3], intensities=xyzi_rmv_proj[:, 3])],
-        #                                      window_name="After Projection")
+        # visualize z-axis removed point cloud
+        _xyzi_rmv_proj = xyzi_rmv_proj.copy()
+        _z_mean = np.mean(_xyzi_rmv_proj[:, 2])
+        _xyzi_rmv_proj[:, 2] = _z_mean
+        point_cloud_visualization.vis_arr_by_intensity_at_viewpoint(
+            arr=_xyzi_rmv_proj, title="3-after projection (z removed)",
+            view_file="utils/camera-plate.json", intensity_color=True)
+        # # visualize intensity distribution
+        # plt.violinplot(xyzi_rmv_proj[:, 2], showmeans=True, showextrema=True, showmedians=False, widths=0.8)
+        # plt.ylabel("intensity")
+        # plt.show()
+        # plt.cla()
 
     # === 4 === thresh to binary
     xyi_rmv_proj_bin = xyi_rmv_proj.copy()
@@ -234,37 +242,43 @@ def handler(xyzi, dist_thresh=0.05,
     xyi_rmv_proj_bin[np.where(xyi_rmv_proj[:, 2] <= intthr), 2] = 0
 
     if -1 < visualize <= 4:
-        fig = plt.figure()
-        # === subplot 1: raw points + fit plane
-        # raw points
-        ax1 = fig.add_subplot(111, projection='3d')
-        # ax1.scatter(xyz[:, 0], xyz[:, 1], xyz[:, 2], s=10, c="red", marker='.')
-        ax1.set_xlabel('x'), ax1.set_ylabel('y'), ax1.set_zlabel('z')
-        # normal vector of the fit plane
-        plane_norm = np.array([plane_a, plane_b, plane_c])  # already normed
-        x_start, y_start, z_start = np.mean(xyz[:, 0]), np.mean(xyz[:, 1]), np.mean(xyz[:, 2])
-        plot_norm_len = 5
-        ax1.quiver(x_start, y_start, z_start,
-                   x_start + plane_norm[0] * plot_norm_len,
-                   y_start + plane_norm[1] * plot_norm_len,
-                   z_start + plane_norm[2] * plot_norm_len,
-                   arrow_length_ratio=0.1)
-        # fit plane
-        # xx = np.arange(np.min(xyz[:, 0]), np.max(xyz[:, 0]), 0.05)  # (min,max)=(-3.586, -3.383)
-        # yy = np.arange(np.min(xyz[:, 1]), np.max(xyz[:, 1]), 0.05)  # (min,max)=(0.087, 0.611)
-        xx = xyz[:, 0]
-        yy = xyz[:, 1]
-        X, Y = np.meshgrid(xx, yy)
-        Z = (plane_a * X + plane_b * Y + plane_d) * 1. / plane_c
-        # z = lambda x, y: (-ransac.estimator_.intercept_ - ransac.estimator_.coef_[0] * x
-        #                   - ransac.estimator_.coef_[1] * y) / ransac.estimator_.coef_[2]
-        # Z = z(X, Y)
-        print(X[0][:10])
-        print(Y[0][:10])
-        print(xyz[:, 2][:10])
-        print(Z[0][:10])
-        ax1.plot_surface(X, Y, Z, color="lightgrey", alpha=0.2)  # ,cmap='rainbow')
+        plt.clf()
+        _xyi_ones = xyi_rmv_proj_bin[np.where(1 == xyi_rmv_proj_bin[:, 2])]
+        _xyi_zeros = xyi_rmv_proj_bin[np.where(0 == xyi_rmv_proj_bin[:, 2])]
+        plt.scatter(_xyi_ones[:, 0], _xyi_ones[:, 1], c="red", s=10)
+        plt.scatter(_xyi_zeros[:, 0], _xyi_zeros[:, 1], c="black", s=10)
         plt.show()
+        # fig = plt.figure()
+        # # === subplot 1: raw points + fit plane
+        # # raw points
+        # ax1 = fig.add_subplot(111, projection='3d')
+        # # ax1.scatter(xyz[:, 0], xyz[:, 1], xyz[:, 2], s=10, c="red", marker='.')
+        # ax1.set_xlabel('x'), ax1.set_ylabel('y'), ax1.set_zlabel('z')
+        # # normal vector of the fit plane
+        # plane_norm = np.array([plane_a, plane_b, plane_c])  # already normed
+        # x_start, y_start, z_start = np.mean(xyz[:, 0]), np.mean(xyz[:, 1]), np.mean(xyz[:, 2])
+        # plot_norm_len = 5
+        # ax1.quiver(x_start, y_start, z_start,
+        #            x_start + plane_norm[0] * plot_norm_len,
+        #            y_start + plane_norm[1] * plot_norm_len,
+        #            z_start + plane_norm[2] * plot_norm_len,
+        #            arrow_length_ratio=0.1)
+        # # fit plane
+        # # xx = np.arange(np.min(xyz[:, 0]), np.max(xyz[:, 0]), 0.05)  # (min,max)=(-3.586, -3.383)
+        # # yy = np.arange(np.min(xyz[:, 1]), np.max(xyz[:, 1]), 0.05)  # (min,max)=(0.087, 0.611)
+        # xx = xyz[:, 0]
+        # yy = xyz[:, 1]
+        # X, Y = np.meshgrid(xx, yy)
+        # Z = (plane_a * X + plane_b * Y + plane_d) * 1. / plane_c
+        # # z = lambda x, y: (-ransac.estimator_.intercept_ - ransac.estimator_.coef_[0] * x
+        # #                   - ransac.estimator_.coef_[1] * y) / ransac.estimator_.coef_[2]
+        # # Z = z(X, Y)
+        # print(X[0][:10])
+        # print(Y[0][:10])
+        # print(xyz[:, 2][:10])
+        # print(Z[0][:10])
+        # ax1.plot_surface(X, Y, Z, color="lightgrey", alpha=0.2)  # ,cmap='rainbow')
+        # plt.show()
 
     # === 5 === splat into grids
     dist = dist_point_2_plane(x=0, y=0, z=0, p_a=plane_a, p_b=plane_b, p_c=plane_c, p_d=plane_d)  # in m
