@@ -7,7 +7,7 @@ import board_extractor
 import plane_projection
 import point_cloud_visualization
 
-group, frame = 3, 328
+group, frame = 3, 268
 file = "data/seq60_00000__%d-%d.bin" % (group, frame)
 data = data_loader.load_data(file=file)
 
@@ -17,6 +17,11 @@ if 1 == group:
     data_copy = data_copy[np.where((data_copy[:, 0] < 0) & (data_copy[:, 0] > -10)
                                    & (data_copy[:, 1] < 5)
                                    & (data_copy[:, 1] > -5)
+                                   )]
+elif 3 == group:
+    data_copy = data_copy[np.where((data_copy[:, 0] < 0) & (data_copy[:, 0] > -10)
+                                   & (data_copy[:, 1] < 15)
+                                   & (data_copy[:, 1] > 0)
                                    )]
 # data_copy[:, 3] *= 256.
 # data_copy[:, 3] /= 255.
@@ -31,7 +36,7 @@ point_cloud_visualization.vis_arr_by_intensity_at_viewpoint(arr=data_copy, title
 ENABLE_TIMER = False
 # extract planes
 extract_res_file = "data/extract_results__%d-%d.pkl" % (group, frame)
-draw_extract = False
+draw_extract = True
 if ENABLE_TIMER is False and draw_extract is False and os.path.exists(extract_res_file):
     with open(extract_res_file, "rb") as f:
         ex_res = pickle.load(f)
@@ -54,8 +59,8 @@ hori_angle_resol, vert_angle_resol = 0.1, 0.33
 
 for plane_xyzi in ex_res[:1]:
     plane_projection.handler(xyzi=plane_xyzi,
-                             intthr=0.1,
+                             intthr=0.3,
                              hori_angle_resol=hori_angle_resol, vert_angle_resol=vert_angle_resol, pixel_margin=50,
-                             dist_thresh=0.1, visualize=1 if ENABLE_TIMER is False else -1)
+                             dist_thresh=0.1, visualize=3 if ENABLE_TIMER is False else -1)
 
 print()
