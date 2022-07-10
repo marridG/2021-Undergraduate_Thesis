@@ -137,8 +137,7 @@
  ┃ ┃ ┃ ┣ 📜canvas_v2_1__tri00.png         // VERSION-2-1: triangke (without scaled height; without optimal height:width ratio)
  ┃ ┃ ┃ ┣ 📜canvas_v2_1__tri01.png         // VERSION-2-1: triangke (without scaled height; with optimal height:width ratio)
  ┃ ┃ ┃ ┣ 📜canvas_v2_1__tri10.png         // VERSION-2-1: triangke (with scaled height; without optimal height:width ratio)
- ┃ ┃ ┃ ┣ 📜canvas_v2_1__tri11.png         // VERSION-2-1: triangke (with scaled height; with optimal height:width ratio)
- ┃ ┃ ┃ ┗ 📜canvas_v3__cir01.png           // VERSION-3: circle (without scaled height; with optimal height:width ratio)
+ ┃ ┃ ┃ ┗ 📜canvas_v2_1__tri11.png         // VERSION-2-1: triangke (with scaled height; with optimal height:width ratio)
  ┃ ┃ ┣ 📜plot_binary.py                    // sciipts to plot the given sample results (all as binary pits)
  ┃ ┃ ┣ 📜sample.npy                        // example sample results
  ┃ ┃ ┣ 📜sample_binarized.png              // plot of `sample.npy` by `plot_binary.py`
@@ -388,7 +387,7 @@
 + *Wed Mar 16 17:48:53 2022*:
     - **[DESCRIPTION]** end of encoding v1
 + *Mon Mar 7 23:00:41 2022*:
-    - **[FILES]**: [traffic_signs.py](./simulation/data_v1/traffic_signs.py)
+    - **[FILES]**: [traffic_signs.py](./simulation/data_v1/taffic_signs.py)
     - **[DESCRIPTION]** rename class in `traffic_signs.py`: TrafficSigns to TrafficSignsData
 + *Mon Mar 7 23:00:32 2022*:
     - **[DESCRIPTION]** finish encoding v1
