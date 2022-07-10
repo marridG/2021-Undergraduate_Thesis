@@ -18,6 +18,7 @@ Prof. *H.Y. Zhu* (Advisor)
   - [File Tree](#file-tree)
   - [Quick Start](#quick-start)
     - [Workflow](#workflow)
+    - [Recommended Environment](#recommended-environment)
     - [Links and HyperLinks](#links-and-hyperlinks)
   - [Update Logs](#update-logs)
 
@@ -220,6 +221,23 @@ Prof. *H.Y. Zhu* (Advisor)
 + encoder (categorized indices => 2-level encodings) are implemented in [link](./simulation/encoding_v2_1/encode_v2_1.py)
 
 </details>
+
+
+
+<a id="recommended-environment"></a>
+### Recommended Environment
+
++ Python Interpreter: `Python 3.7.6`
++ Integrated Development Environment: `PyCharm 2020.1.1 (Professional Edition)`
+  <details>
+  <summary>IDE Operations</summary>
+
+  Mark Directory as Sources Root (so as to fix the problem of relative imports)
+  + `./detection/my_detection`
+  + `./detection/my_detection/tests`
+  + `./simulation/data_v1`
+  + `./simulation/data_v2`
+  </details>
 
 
 
