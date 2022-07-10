@@ -165,3 +165,256 @@
 ```
 
 </details>
+
+
+
+
+## Update Logs
+
+<details>
+<summary>Update Logs</summary>
+
++ *Mon Jun 27 18:45:50 2022*:
+    - **[DESCRIPTION]** rename `.bin` files & uodate `do_extraction.py` correspondingly
++ *Mon Jun 27 11:05:05 2022*:
+    - **[DESCRIPTION]** in `plane_projection.py`: annotate visualization for plane fitting point removal
++ *Mon Jun 27 11:03:21 2022*:
+    - **[DESCRIPTION]** in `plane_projection.py`: (1) add point removal for plane fitting; (2) bug fix: wrong points selection after statistical outlier removal
++ *Mon Jun 27 10:32:26 2022*:
+    - **[DESCRIPTION]** in `plane_projection.py`: add on-off board points splitter as the very beggining
++ *Mon Jun 27 10:29:43 2022*:
+    - **[DESCRIPTION]** in `board_extractor.py`: finish modifications: add visualization results of no-missing points
++ *Tue Jun 21 19:55:28 2022*:
+    - **[DESCRIPTION]** in file `plane_projection.py`: some plane fitting attempts (not that successful)
++ *Tue Jun 21 19:50:50 2022*:
+    - **[DESCRIPTION]** in file `plane_projection.py`: enable point cloud visualization, where points are colored by intensity values; some plane fitting attempts (not that successful)
++ *Tue Jun 21 19:47:52 2022*:
+    - **[DESCRIPTION]** in file `board_extractor.py`: (1) [bug fix] fix missing 3D points corresponding to 2D clusters; (2) [visualization] add visualization at each step (colored by intensity). TODO: update visualization correspondingly
++ *Tue Jun 21 19:44:34 2022*:
+    - **[DESCRIPTION]** in file `do_extraction.py`: modify filenames for data of different frames; modify raw data visualization by limiting the visible point cloud range to provide better observation for the test plate
++ *Tue Jun 21 19:42:46 2022*:
+    - **[DESCRIPTION]** ignore `.pkl` files & remove previously added `extract_results.pkl`
++ *Tue Jun 21 19:29:52 2022*:
+    - **[DESCRIPTION]** ignore `.pcap`, `.csv` files
++ *Tue Jun 21 11:15:10 2022*:
+    - **[DESCRIPTION]** add more data: frame #320, #322
++ *Fri Jun 17 10:41:33 2022*:
+    - **[DESCRIPTION]** update `.gitignore`: ignore test scripts in detection
++ *Mon Jun 13 14:48:49 2022*:
+    - **[DESCRIPTION]** `in design_analysis/max_dist_cal.py`: add method `cal_dist_by_hw`, which calculate the maximum distance by the given bar height and width, regardless of the shape
++ *Mon Jun 13 10:57:07 2022*:
+    - **[DESCRIPTION]** in `design_analysis/max_dist_cal.py`: add some default values
++ *Mon Jun 13 10:53:12 2022*:
+    - **[DESCRIPTION]** in `design_analysis/max_dist_cal.py`: add some annotations
++ *Mon Jun 13 10:48:29 2022*:
+    - **[DESCRIPTION]** in `design_analysis/max_dist_cal.py`: allow changing default sign board sizes; make bar height&width calculation method public
++ *Sat Jun 11 21:32:08 2022*:
+    - **[DESCRIPTION]** finish max distance calculation: (1) calculation; (2) optimal ratio finder
++ *Sat Jun 11 16:42:37 2022*:
+    - **[DESCRIPTION]** add deprecated files of design analysis
++ *Sat Jun 11 15:37:17 2022*:
+    - **[DESCRIPTION]** finish max distance calculation. further todo: best height:width ratio finder
++ *Thu Jun 9 20:53:12 2022*:
+    - **[DESCRIPTION]** init max distance calculation. todo: test, optimal ratio numerical validator
++ *Thu Jun 9 17:46:43 2022*:
+    - **[DESCRIPTION]** add numerical simulation for possible duplicate sample results of level 1 sequences
++ *Mon Jun 13 14:48:49 2022*:
+    - **[DESCRIPTION]** in `design_analysis/max_dist_cal.py`: add method `cal_dist_by_hw`, which calculate the maximum distance by the given bar height and width, regardless of the shape
++ *Mon Jun 13 10:57:07 2022*:
+    - **[DESCRIPTION]** in `design_analysis/max_dist_cal.py`: add some default values
++ *Mon Jun 13 10:53:12 2022*:
+    - **[DESCRIPTION]** in `design_analysis/max_dist_cal.py`: add some annotations
++ *Mon Jun 13 10:48:29 2022*:
+    - **[DESCRIPTION]** in `design_analysis/max_dist_cal.py`: allow changing default sign board sizes; make bar height&width calculation method public
++ *Sat Jun 11 21:32:08 2022*:
+    - **[DESCRIPTION]** finish max distance calculation: (1) calculation; (2) optimal ratio finder
++ *Sat Jun 11 16:42:37 2022*:
+    - **[DESCRIPTION]** add deprecated files of design analysis
++ *Sat Jun 11 15:39:20 2022*:
+    - **[DESCRIPTION]** remove local pole-localization repo clone
++ *Sat Jun 11 15:37:17 2022*:
+    - **[DESCRIPTION]** finish max distance calculation. further todo: best height:width ratio finder
++ *Thu Jun 9 20:53:12 2022*:
+    - **[DESCRIPTION]** init max distance calculation. todo: test, optimal ratio numerical validator
++ *Thu Jun 9 17:46:43 2022*:
+    - **[DESCRIPTION]** add numerical simulation for possible duplicate sample results of level 1 sequences
++ *Mon Jun 6 20:07:10 2022*:
+    - **[DESCRIPTION]** add binary sample result plot drawer
++ *Mon Jun 6 20:05:16 2022*:
+    - **[DESCRIPTION]** add plot drawer: no titles + larger labels version, for circle-11X only
++ *Mon Jun 6 20:03:57 2022*:
+    - **[DESCRIPTION]** adjust plot margin settings
++ *Mon Jun 6 20:01:29 2022*:
+    - **[DESCRIPTION]** add decoder timer
++ *Mon Jun 6 19:56:59 2022*:
+    - **[DESCRIPTION]** add binary results plotter
++ *Mon Jun 6 19:56:43 2022*:
+    - **[DESCRIPTION]** slight directory updates: move color bars for point cloud visualization to `utils/pt_cloud_color_bar`
++ *Mon Jun 6 19:53:49 2022*:
+    - **[DESCRIPTION]** add open3d camera settings for sign boards view only
++ *Mon Jun 6 19:49:37 2022*:
+    - **[DESCRIPTION]** ignore `*.npy`
++ *Mon Jun 6 19:49:00 2022*:
+    - **[DESCRIPTION]** add point cloud visualizer: point color by intensity
++ *Mon Jun 6 19:48:15 2022*:
+    - **[DESCRIPTION]** add timer for the detection scripts
++ *Sat May 14 16:39:12 2022*:
+    - **[DESCRIPTION]** Merge branch 'detection_pole'
++ *Sat May 14 16:34:32 2022*:
+    - **[DESCRIPTION]** plane projection codes TO-BE-DEBUGGED
++ *Sat May 14 16:14:41 2022*:
+    - **[DESCRIPTION]** in file `lidar_resolution_analysis.py`: change some settings for thesis writing
++ *Sun May 8 19:26:33 2022*:
+    - **[DESCRIPTION]** board extraction: add camera options for the visualizer
++ *Sun May 8 19:26:07 2022*:
+    - **[DESCRIPTION]** board extraction: finish the board extractor and useful visualizer
++ *Sun May 8 19:24:26 2022*:
+    - **[DESCRIPTION]** board extraction: finish the data loader for `.bin` files
++ *Sun May 8 19:23:27 2022*:
+    - **[DESCRIPTION]** finish data prep (scripts are run on server) & get the result `.pcd` and `.bin` files from the given `.csv` file
++ *Sun May 8 19:22:06 2022*:
+    - **[DESCRIPTION]** finish pole-localization repo understanding
++ *Thu May 5 15:16:37 2022*:
+    - **[DESCRIPTION]** init pole localization repo
++ *Thu May 5 15:07:09 2022*:
+    - **[DESCRIPTION]** draw some plots
++ *Thu May 5 15:06:08 2022*:
+    - **[DESCRIPTION]** update to-be-avoided indices & modify correspondingly
++ *Thu May 5 15:04:35 2022*:
+    - **[DESCRIPTION]** finish decoder v3 for encoding v2.1
++ *Fri Apr 22 09:47:34 2022*:
+    - **[DESCRIPTION]** init plot drawing scripts: in file `draw.py`, also update .gitignore to ignore `.txt` data files
++ *Fri Apr 22 09:42:46 2022*:
+    - **[DESCRIPTION]** init decoder V2-ver3. decoder WORKFLOW: deocde by back trace
++ *Thu Apr 21 18:54:56 2022*:
+    - **[DESCRIPTION]** slight updates in file `data_v2/constants.py`
++ *Wed Apr 20 18:29:59 2022*:
+    - **[DESCRIPTION]** init & finish ver2-1 decoder & test scripts. detection in decoder: detect & slice by starting 0 in the first category_1 line
++ *Wed Apr 20 18:28:33 2022*:
+    - **[DESCRIPTION]** rename ver2 decoder to ver2_0; add batch test runner in file `test_encoding_v2_1_ver2_0.py`; bug fix in file `decode_v2_1_ver2_0.py`: failed to remove bottom all-one lines, wrong calculation of maximum lines of sample points on the encoding part if scale height is used
++ *Sun Apr 17 21:57:28 2022*:
+    - **[DESCRIPTION]** init encoding v2.1 ver3 decoder. decoder WORKFLOW: raw points -> decode by starting 0 to find patterns -> slice raw points -> iteratively decode
++ *Sun Apr 17 21:56:46 2022*:
+    - **[DESCRIPTION]** add codes for avoid-divide-by-zero problem & round(0.5)=0/1 problem BUT NOT implemented (still remain annotated)
++ *Sun Apr 17 21:55:40 2022*:
+    - **[DESCRIPTION]** test something in file `pattern_v2_1.py` BUT nothing is changed w.r.t. the general behaviour
++ *Sun Apr 17 21:52:51 2022*:
+    - **[DESCRIPTION]** finish encoding v2.1 ver1 decoder debug for extremely bad accuracy at 10-30m: previously failed to remove above all-one lines, PLUS influence-unknown factors (hori starting loc range, round(0.5)=0/1, whether to stop once 1 pattern is found). decoder WORKFLOW: raw points -> iteratively decode to find patterns -> slice decoded points
++ *Sun Apr 17 21:50:14 2022*:
+    - **[DESCRIPTION]** finish encoding-v2.1 ver2 decoder & part statistical tests: raw points -> iteratively decode to find patterns -> slice raw points -> iteratively decode
++ *Sun Apr 17 15:38:42 2022*:
+    - **[DESCRIPTION]** add vert/hori step size settings in method `sample_at_distance()` in file `lidar_points.py`
++ *Thu Apr 14 15:59:34 2022*:
+    - **[DESCRIPTION]** enable cnt delta swith, all ones switch
++ *Mon Apr 11 12:56:07 2022*:
+    - **[DESCRIPTION]** slight plot labels updates, in file `sample_cnt_analysis.py`
++ *Sun Apr 10 18:49:11 2022*:
+    - **[DESCRIPTION]** slight updates: add assertion that the number of bars is not ZERO, in method `decode_one_line()` in file utils.py
++ *Sun Apr 10 18:36:16 2022*:
+    - **[DESCRIPTION]** slight error update for No-Zero-In-Sample-Points in method `decode()` in file `decode_v2_1.py`: change AssertionError to DecodeFailure
++ *Sun Apr 10 18:25:25 2022*:
+    - **[DESCRIPTION]** [Tested] enable decoder for triangle & circle boards
++ *Sat Apr 9 17:35:49 2022*:
+    - **[DESCRIPTION]** update encoding v2.1 test codes for more settings
++ *Sat Apr 9 14:46:15 2022*:
+    - **[DESCRIPTION]** update to enable placing encodings onto triangle&circle traffic sign boards
++ *Sat Apr 9 14:44:53 2022*:
+    - **[DESCRIPTION]** slight debug message updates
++ *Fri Apr 8 11:22:56 2022*:
+    - **[DESCRIPTION]** add naive search codes for possible advanced properties, as in file: `advanced_property_search.py`
++ *Fri Apr 8 11:21:56 2022*:
+    - **[DESCRIPTION]** move all analysis-related files to `~/simulation/analysis/`
++ *Fri Apr 8 10:19:16 2022*:
+    - **[DESCRIPTION]** slight updates for scaled height test support
++ *Fri Apr 8 10:18:31 2022*:
+    - **[DESCRIPTION]** bug fix in decode_v2_1.py: (1) iter hori starting point range, TO min(schema_width, margin); (2) is_complete info of tolerated results
++ *Fri Apr 8 10:17:02 2022*:
+    - **[DESCRIPTION]** add analysis for the delta of the number of sampled points that fall into each bar, as in: `sample_cnt_analysis.py`
++ *Thu Apr 7 14:50:36 2022*:
+    - **[DESCRIPTION]** finish encoding v2.1 (rectangle)
++ *Sun Apr 3 21:28:07 2022*:
+    - **[DESCRIPTION]** lidar points sampling: slight debug message updates
++ *Sun Apr 3 21:20:08 2022*:
+    - **[DESCRIPTION]** lidar points sampling: slight debug message updates
++ *Sun Apr 3 20:59:19 2022*:
+    - **[DESCRIPTION]** encoding v2.1: finish draft version of the entire en/decoding&test, under the condition that a "overflowing" number of points (hori&vert) are sampled. TODO: fewer sampled points cases, different encoding height on the board
++ *Sun Apr 3 20:56:25 2022*:
+    - **[FILES]**: [traffic_signs.py](./simulation/data_v2/traffic_signs.py)
+    - **[DESCRIPTION]** fix bugs in data v2 `traffic_signs.py`: in method `get_sign_info_by_idx()`, "is_complete" info is missing in the returned results
++ *Sun Apr 3 20:55:17 2022*:
+    - **[DESCRIPTION]** add newly-found TODO problems to v1.2 decoding
++ *Sun Apr 3 16:17:46 2022*:
+    - **[DESCRIPTION]** fix message-printing bugs in data v2
++ *Sun Apr 3 15:14:55 2022*:
+    - **[DESCRIPTION]** fix import bugs in data v2
++ *Sun Apr 3 15:12:47 2022*:
+    - **[DESCRIPTION]** add encoding v2.1 (codes copied from v1.2); finish the encoding + pattern parts
++ *Fri Apr 1 10:27:20 2022*:
+    - **[DESCRIPTION]** slight filenames updates for previously committed encoding designs version name changes
++ *Fri Apr 1 09:30:21 2022*:
+    - **[DESCRIPTION]** add data_v2
++ *Fri Apr 1 09:25:48 2022*:
+    - **[DESCRIPTION]** rename data encoding: data->data_v1
++ *Fri Apr 1 09:24:28 2022*:
+    - **[DESCRIPTION]** rename encoding designs: v1->v1_1, v2->v1_2
++ *Fri Apr 1 09:15:04 2022*:
+    - **[DESCRIPTION]** remove all codes in `test.py`
++ *Fri Apr 1 09:14:52 2022*:
+    - **[DESCRIPTION]** statistical successful rate analysis
++ *Sun Mar 27 19:38:23 2022*:
+    - **[DESCRIPTION]** almost finish V2 encoding: both encoding & decoding & test
++ *Sun Mar 27 19:37:43 2022*:
+    - **[DESCRIPTION]** add some annotations
++ *Sun Mar 27 18:40:29 2022*:
+    - **[DESCRIPTION]** add handlers of traffic signs (& add annotations): extract sign str info by category_1, category_2(local ref idx) and/or num indices
++ *Sun Mar 27 17:14:44 2022*:
+    - **[DESCRIPTION]** modify LiDAR sampling: add location info, delete distance->margin functions; modify `test_encoding_v1.py` accordingly
++ *Sun Mar 27 17:11:05 2022*:
+    - **[FILES]**: [exceptions.py](./simulation/exceptions.py)
+    - **[DESCRIPTION]** finish `exceptions.py`: decode errors
++ *Wed Mar 16 23:35:36 2022*:
+    - **[DESCRIPTION]** finish v2 encoding implementation
++ *Wed Mar 16 22:34:58 2022*:
+    - **[DESCRIPTION]** slight updates: filename edit
++ *Wed Mar 16 22:34:25 2022*:
+    - **[DESCRIPTION]** move encodings test scripts to `~/simulation/tests/`
++ *Wed Mar 16 18:12:49 2022*:
+    - **[DESCRIPTION]** reformat data codes
++ *Wed Mar 16 17:49:52 2022*:
+    - **[DESCRIPTION]** init v2 encoding
++ *Wed Mar 16 17:49:23 2022*:
+    - **[FILES]**: [.gitignore](./.gitignore)
+    - **[DESCRIPTION]** update .gitignore
++ *Wed Mar 16 17:48:53 2022*:
+    - **[DESCRIPTION]** end of encoding v1
++ *Mon Mar 7 23:00:41 2022*:
+    - **[FILES]**: [traffic_signs.py](./simulation/data_v1/traffic_signs.py)
+    - **[DESCRIPTION]** rename class in `traffic_signs.py`: TrafficSigns to TrafficSignsData
++ *Mon Mar 7 23:00:32 2022*:
+    - **[DESCRIPTION]** finish encoding v1
++ *Mon Mar 7 22:43:53 2022*:
+    - **[DESCRIPTION]** change numbers on traffic signs to "discrete" distributions
++ *Mon Mar 7 21:53:35 2022*:
+    - **[DESCRIPTION]** finish sampling the whole canvas; add several lines of annotation in visualization.py
++ *Mon Mar 7 20:53:34 2022*:
+    - **[DESCRIPTION]** remove the "bright" color, which should be identical to that of the board
++ *Wed Mar 2 20:20:20 2022*:
+    - **[DESCRIPTION]** add utils: degree <-> radian conversion
++ *Wed Mar 2 19:39:19 2022*:
+    - **[DESCRIPTION]** something on lidar resolution analysis: line resolution w.r.t distance, angle resolution, sign size
++ *Tue Mar 1 13:00:04 2022*:
+    - **[DESCRIPTION]** finish visualization codes: base "abstract-like" class, traffic sign boards
++ *Sun Feb 27 19:09:04 2022*:
+    - **[DESCRIPTION]** finish encoding of the traffic signs (as "data")
++ *Sun Feb 27 15:15:03 2022*:
+    - **[DESCRIPTION]** add environment setting bash scripts for LiDAR hardware
++ *Sun Feb 27 15:14:27 2022*:
+    - **[FILES]**: [.gitignore](./.gitignore)  
+    - **[DESCRIPTION]** add .gitignore
++ *Thu Jan 13 10:25:15 2022*:
+    - **[DESCRIPTION]** Initial commit
+
+
+
+</details>
+
