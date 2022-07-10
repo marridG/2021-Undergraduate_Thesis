@@ -2,10 +2,10 @@
 
 ***LiCode: A Multimodality-Friendly Encoding Design for Traffic Signs***
 
-========== SPECIAL THANKS ==========
-Prof. *H.Y. Zhu* (Advisor)
-*Y.X. Cai* (Assistant Advisor)
-========== ❤❤❤❤❤❤❤❤❤ ========== 
+========== SPECIAL THANKS ==========  
+Prof. *H.Y. Zhu* (Advisor)  
+*Y.X. Cai* (Assistant Advisor)  
+========== ❤❤❤❤❤❤❤❤ ========== 
 
 
 <br>
