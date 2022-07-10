@@ -1,13 +1,25 @@
-# 2021-Undergraduate-Thesis
+# 2021 Undergraduate Thesis
+
+***LiCode: A Multimodality-Friendly Encoding Design for Traffic Signs***
+
+========== SPECIAL THANKS ==========
+Prof. *H.Y. Zhu* (Advisor)
+*Y.X. Cai* (Assistant Advisor)
+========== ❤❤❤❤❤❤❤❤❤ ========== 
+
+
+<br>
+
 
 **Table of Contents**
 <!-- MarkdownTOC -->
 
-- [File Tree](#file-tree)
-- [Quick Start](#quick-start)
+- [2021 Undergraduate Thesis](#2021-undergraduate-thesis)
+  - [File Tree](#file-tree)
+  - [Quick Start](#quick-start)
     - [Workflow](#workflow)
     - [Links and HyperLinks](#links-and-hyperlinks)
-- [Update Logs](#update-logs)
+  - [Update Logs](#update-logs)
 
 <!-- /MarkdownTOC -->
 
@@ -187,6 +199,9 @@
 
 
 
+<br>
+
+
 <a id="quick-start"></a>
 ## Quick Start
 
@@ -231,6 +246,8 @@
 
 
 
+
+<br>
 
 <a id="update-logs"></a>
 ## Update Logs
