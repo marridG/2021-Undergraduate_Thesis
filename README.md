@@ -168,6 +168,48 @@
 
 
 
+## Quick Start
+
+
+### Workflow
+
+<details>
+<summary>Workflow Illustration</summary>
+
+![](./_readme_pics/000workflow-1.png)
+![](./_readme_pics/000workflow-2.png)
+
+[**Note**] in the illustration above:
++ encoding schema (traffic sign boards contents => categorized indices) used are implemented in [data_v2](./simulation/data_v2/)
++ encoder (categorized indices => 2-level encodings) are implemented in [link](./simulation/encoding_v2_1/encode_v2_1.py)
+
+</details>
+
+
+
+### Links and HyperLinks
+
++ **FULL UTILITIES** (2022-07-10: inaccessible): [Github](https://github.com/marridG/2021-Undergraduate-Thesis) (Starring of ANY related repositories are appreciated)
++ **RoboSense LiDAR use**
+  + docs: [RS-LiDAR-16](https://www.robosense.cn/resources-27), [RS-LiDAR-32](https://www.robosense.cn/resources-24)
+  + set IP address: [link](environment/Set%20IP%20Address.bat)
+  + restore IP address: [link](environment/Restore%20IP%20Address%20to%20DHCP.bat)
++ **encoding design analysis**
+  + maximum working distance: [link](./design_analysis/max_dist_cal.py)
++ **detection**
+   + data preparation (`.pcap` \==RoboSense-RSView==> `.csv` ==> `.pcd`/`.bin`): [link](./detection/data_prep/)
+   + points extraction: [link](./detection/my_detection/do_extraction.py)
++ **encoder + decoder simulation** (encoding schema VERSION-2-1, decoder version-3)
+  + simulation: [link](./simulation/tests/test_encoding_v2_1_ver3.py)
+  + demonstration of encoding-embedded traffic sign boards: [link](./simulation/tests/canvas_img/canvas_v2_1__tri11.png)
+    + traffic sign board contents => categorized indices: [link](./simulation/data_v2/taffic_signs.py)
+    + categorized indices => 2-level encodings: [link](./simulation/encoding_v2_1/encode_v2_1.py)
+    + 2-level encodings => demonstration image: [link](simulation/visualization.py)
+  + plot simulation results: [link](./simulation/tests_plots/draw.py)
+
+
+
+
 ## Update Logs
 
 <details>
